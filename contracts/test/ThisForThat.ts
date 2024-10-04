@@ -18,22 +18,28 @@ describe("ThisForThat", function () {
       throw new Error(`No config for chainId ${chainId}`);
     }
 
+    const WHALE_TOKEN = config.TOKENS.find((t) => t.address === config.WHALE_TOKEN);
+    const OTHER = config.TOKENS.find((t) => t.address !== config.WHALE_TOKEN);
+    if (!WHALE_TOKEN || !OTHER) {
+      throw new Error(`Missing WHALE_TOKEN or OTHER token`);
+    }
+
     const ThisForThat = await hre.ethers.getContractFactory("ThisForThat");
     const thisForThat = await ThisForThat.deploy(
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
-      [config.TOKENS.USDC],
+      [WHALE_TOKEN.address],
       config.FEE
     );
 
     // fund with USDC
     await whileImpersonating(hre, config.WHALE, async (signer) => {
-      const usdc = await hre.ethers.getContractAt("IERC20", config.TOKENS.USDC, signer);
+      const usdc = await hre.ethers.getContractAt("IERC20", WHALE_TOKEN.address, signer);
       await usdc.transfer(user, "1000000000");
     })
 
-    return { thisForThat, owner, relayer, user, config };
+    return { thisForThat, owner, relayer, user, config, WHALE_TOKEN, OTHER };
   }
 
   describe("Deployment", function () {
@@ -52,11 +58,11 @@ describe("ThisForThat", function () {
 
   describe("swapForEth", function () {
     it("Should swap whitelisted token for eth using permit", async () => {
-      const { thisForThat, user, relayer, config } = await loadFixture(deployMainnetForkFixture);
+      const { thisForThat, user, relayer, config, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
       const thisForThatAddress = await thisForThat.getAddress()
       const amount = BigInt("10000000")
       const relayerMinFee = config.FEE;
-      const token = config.TOKENS.USDC;
+      const token = WHALE_TOKEN.address;
 
 
       // permit contract to withdraw token
@@ -95,11 +101,11 @@ describe("ThisForThat", function () {
     })
 
     it("Should revert if token is not whitelisted", async () => {
-      const { thisForThat, user, relayer, config } = await loadFixture(deployMainnetForkFixture);
+      const { thisForThat, user, relayer, config, OTHER } = await loadFixture(deployMainnetForkFixture);
       const thisForThatAddress = await thisForThat.getAddress()
       const amount = BigInt("10000000")
       const relayerMinFee = config.FEE;
-      const token = config.TOKENS.OTHER;
+      const token = OTHER.address;
 
       // permit contract to withdraw token
       const { v, r, s, deadline } = await getPermitSignature(
@@ -122,11 +128,11 @@ describe("ThisForThat", function () {
     })
 
     it("Should revert if fee doesn't match min fee by relayer", async () => {
-      const { thisForThat, user, relayer, config } = await loadFixture(deployMainnetForkFixture);
+      const { thisForThat, user, relayer, config, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
       const thisForThatAddress = await thisForThat.getAddress()
       const amount = BigInt("10000000")
       const relayerMinFee = config.FEE * BigInt(2);
-      const token = config.TOKENS.USDC
+      const token = WHALE_TOKEN.address
 
       // permit contract to withdraw token
       const { v, r, s, deadline } = await getPermitSignature(
@@ -149,11 +155,11 @@ describe("ThisForThat", function () {
     })
 
     it("Should revert if after swap there're not enough funds for relayer fee", async () => {
-      const { thisForThat, user, relayer, config } = await loadFixture(deployMainnetForkFixture);
+      const { thisForThat, user, relayer, config, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
       const thisForThatAddress = await thisForThat.getAddress()
-      const amount = BigInt("100")
       const relayerMinFee = config.FEE;
-      const token = config.TOKENS.USDC;
+      const token = WHALE_TOKEN.address;
+      const amount = BigInt("100") // lower than relayer fee
 
       // permit contract to withdraw token
       const { v, r, s, deadline } = await getPermitSignature(
@@ -178,9 +184,9 @@ describe("ThisForThat", function () {
 
   describe("quoteSwapForEth", function () {
     it("Should quote swap for eth", async () => {
-      const { thisForThat, config } = await loadFixture(deployMainnetForkFixture);
+      const { thisForThat, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
 
-      const [amountOut, relayerFee] = await thisForThat.quoteSwapForEth(config.TOKENS.USDC, 10000000);
+      const [amountOut, relayerFee] = await thisForThat.quoteSwapForEth(WHALE_TOKEN.address, 10000000);
 
       expect(amountOut).to.be.greaterThan(0)
       expect(relayerFee).to.be.greaterThan(0)

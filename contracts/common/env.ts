@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 export enum EnvVar {
+    CHAIN_ID = "CHAIN_ID",
     FORK_BLOCK = "FORK_BLOCK",
-    FORK_CHAIN_ID = "FORK_CHAIN_ID",
     OPT_RPC_URL = "OPT_RPC_URL",
 }
 
