@@ -1,11 +1,11 @@
 import { ethers } from "hardhat";
 
-const PROXY_ADDRESS = require("../deployments/ThisForThat.json").address;
+const PROXY_ADDRESS = require("../deployments/GasStation.json").address;
 
 async function main(tokenAddress: string, whitelisted: boolean) {
-    const thisForThat = await ethers.getContractAt("ThisForThat", PROXY_ADDRESS);
+    const gasStation = await ethers.getContractAt("GasStation", PROXY_ADDRESS);
 
-    const tx = await thisForThat.whitelistToken(tokenAddress, whitelisted);
+    const tx = await gasStation.whitelistToken(tokenAddress, whitelisted);
     await tx.wait();
     console.log("Added token to whitelist", tokenAddress);
 }

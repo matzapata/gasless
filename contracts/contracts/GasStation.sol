@@ -1,35 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./interfaces/IWETH.sol";
-import "./interfaces/IQuoter.sol";
-import "./interfaces/ISwapRouter.sol";
-import "./interfaces/IERC20WithPermit.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {IWETH} from "./interfaces/IWETH.sol";
+import {IQuoter} from "./interfaces/IQuoter.sol";
+import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
+import {IERC20WithPermit} from "./interfaces/IERC20WithPermit.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IGasStation, IGasStationEvents} from "./interfaces/IGasStation.sol";
 
-contract ThisForThat is Ownable {
-    uint256 public RELAYER_FEE;
+contract GasStation is Ownable, IGasStation {
+    uint24 internal SWAP_FEE;
+    uint256 internal RELAYER_FEE;
     address public immutable WETH;
     ISwapRouter public immutable SWAP_ROUTER;
     IQuoter public immutable SWAP_QUOTER;
-    uint24 public immutable SWAP_FEE = 3000;
 
-    mapping(address => bool) tokensWhitelist; // whitelist of available tokens (must support permit)
-
-    // events
-    event FeeUpdate(uint256 fee);
+    mapping(address => bool) internal tokensWhitelist; // whitelist of available tokens (must support permit)
 
     constructor(
         ISwapRouter _swapRouter,
         IQuoter _swapQuoter,
         address _weth,
         address[] memory _tokensWhitelist,
-        uint256 _relayerFee
+        uint256 _relayerFee,
+        uint24 _swapFee
     ) Ownable(msg.sender) {
         WETH = _weth;
         RELAYER_FEE = _relayerFee;
         SWAP_ROUTER = _swapRouter;
         SWAP_QUOTER = _swapQuoter;
+        SWAP_FEE = _swapFee;
 
         for (uint i = 0; i < _tokensWhitelist.length; i++) {
             tokensWhitelist[_tokensWhitelist[i]] = true;
@@ -47,12 +47,28 @@ contract ThisForThat is Ownable {
         return tokensWhitelist[token];
     }
 
+    function setRelayerFee(uint256 _fee) external onlyOwner {
+        RELAYER_FEE = _fee;
+
+        emit FeeUpdate(_fee);
+    }
+
+    function getRelayerFee() external view returns (uint256) {
+        return RELAYER_FEE;
+    }
+
+    function setSwapFee(uint24 _fee) external onlyOwner {
+        SWAP_FEE = _fee;
+    }
+
+    function getSwapFee() external view returns (uint24) {
+        return SWAP_FEE;
+    }
+
     function quoteSwapForEth(
         address token, // Address of the ERC-20 token contract
         uint256 amount // Amount of tokens to pull
     ) public view returns (uint256, uint256) {
-        require(isWhitelisted(token), "Token not whitelisted");
-
         IQuoter.QuoteExactInputSingleParams memory params = IQuoter
             .QuoteExactInputSingleParams({
                 tokenIn: token,
@@ -62,12 +78,8 @@ contract ThisForThat is Ownable {
                 sqrtPriceLimitX96: 0
             });
 
-        (
-            uint256 amountOut,
-            /* uint160 sqrtPriceX96After */,
-            /* uint32 initializedTicksCrossed */,
-            /* uint256 gasEstimate */
-        ) = SWAP_QUOTER.quoteExactInputSingle(params);
+        (uint256 amountOut, , , ) = /* uint160 sqrtPriceX96After */ /* uint32 initializedTicksCrossed */ /* uint256 gasEstimate */
+        SWAP_QUOTER.quoteExactInputSingle(params);
 
         return (amountOut, RELAYER_FEE);
     }
@@ -121,19 +133,14 @@ contract ThisForThat is Ownable {
         IWETH(WETH).withdraw(amountOut);
 
         // send the ETH to the recipient address. from is token owners so relayer can't modify
-        (bool success, ) = payable(from).call{value: amountOut - RELAYER_FEE}("");
+        (bool success, ) = payable(from).call{value: amountOut - RELAYER_FEE}(
+            ""
+        );
         require(success, "ETH transfer to receiver failed");
 
         // send fee to relayer
         (success, ) = msg.sender.call{value: RELAYER_FEE}("");
         require(success, "ETH transfer to relayer failed");
-    }
-
-    // set fee
-    function setFee(uint256 _fee) external onlyOwner {
-        RELAYER_FEE = _fee;
-
-        emit FeeUpdate(_fee);
     }
 
     // Allow the contract to receive ETH after unwrapping WETH

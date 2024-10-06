@@ -8,20 +8,21 @@ async function main() {
   const config = networkConfig[chainId];
 
 
-  const ThisForThat = await ethers.getContractFactory('ThisForThat');
-  const thisForThat = await upgrades.deployProxy(ThisForThat, {
+  const GasStation = await ethers.getContractFactory('GasStation');
+  const gasStation = await upgrades.deployProxy(GasStation, {
     constructorArgs: [
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
       config.TOKENS.map(t => t.address),
-      config.FEE
+      config.RElAYER_FEE,
+      config.SWAP_FEE
     ]
   });
-  await thisForThat.waitForDeployment();
-  console.log('ThisForThat deployed to:', await thisForThat.getAddress());
+  await gasStation.waitForDeployment();
+  console.log('GasStation deployed to:', await gasStation.getAddress());
 
-  fs.writeFileSync("../deployments/ThisForThat.json", JSON.stringify({ address: thisForThat.address }, null, 2));
+  fs.writeFileSync("../deployments/GasStation.json", JSON.stringify({ address: gasStation.address }, null, 2));
 }
 
 main();

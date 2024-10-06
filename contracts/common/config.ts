@@ -13,7 +13,8 @@ interface INetworkConfig {
     UNISWAP_WETH: string,
     WHALE: string;
     WHALE_TOKEN: string;
-    FEE: bigint;
+    RElAYER_FEE: bigint;
+    SWAP_FEE: bigint;
 }
 
 export const networkConfig: {
@@ -27,6 +28,7 @@ export const networkConfig: {
         UNISWAP_WETH: "0x4200000000000000000000000000000000000006",
         WHALE: "0x802b65b5d9016621E66003aeD0b16615093f328b",
         WHALE_TOKEN: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-        FEE: BigInt(1000000000000000),
+        RElAYER_FEE: BigInt(1000000000000000),
+        SWAP_FEE: BigInt(3000),
     }
 }
