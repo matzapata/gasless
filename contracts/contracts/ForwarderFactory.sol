@@ -15,6 +15,7 @@ contract ForwarderFactory is IForwarderFactory {
         SWAP_ROUTER = _swapRouter;
     }
 
+    /// @inheritdoc	IForwarderFactory
     function createForwarder(address _forwardTo) public returns (address) {
         Forwarder _forwarder = new Forwarder{salt: _computeSalt(_forwardTo)}(
             GAS_STATION,
@@ -28,6 +29,7 @@ contract ForwarderFactory is IForwarderFactory {
         return address(_forwarder);
     }
 
+    /// @inheritdoc	IForwarderFactory
     function getForwarder(address _forwardTo) public view returns (address) {
         bytes memory bytecode = abi.encodePacked(
             type(Forwarder).creationCode,

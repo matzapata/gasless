@@ -21,27 +21,19 @@ contract Forwarder is IForwarder {
         WETH = _weth;
     }
 
+    /// @inheritdoc	IForwarder
     function forwardTo() public view returns (address) {
         return FORWARD_TO;
     }
 
-    // Flush token to forwardTo
-    function flushToken(address token) public {
-        IERC20 tokenInstance = IERC20(token);
-        uint256 balance = tokenInstance.balanceOf(address(this));
-        if (balance == 0) {
-            revert EmptyBalance();
-        }
+    /// @inheritdoc	IForwarder
+    function flushToken(address token, uint256 amount) external {
+        IERC20(token).transfer(FORWARD_TO, amount);
 
-        // transfer token to forwardTo
-        if (tokenInstance.transfer(FORWARD_TO, balance) == false) {
-            revert FailedTokenTransfer(FORWARD_TO, token, balance);
-        }
-
-        emit ForwarderFlushed(token, balance);
+        emit ForwarderFlushed(token, amount);
     }
 
-    // swap amount for native and send both to forwardTo.
+    /// @inheritdoc	IForwarder
     function flushWithNative(
         address token,
         uint256 amount,
@@ -92,7 +84,7 @@ contract Forwarder is IForwarder {
         }
     }
 
-    //  Default function; Gets called when native is deposited and forwards to forwardTo
+    /// @inheritdoc	IForwarder
     receive() external payable {
         uint256 balance = address(this).balance;
         (bool success, ) = FORWARD_TO.call{value: balance}("");
