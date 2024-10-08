@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 import { networkConfig } from '../common/config';
+import { whileImpersonating } from './utils/impersonating';
 
 describe('Forwarder', function () {
   async function deployFixture() {
@@ -35,18 +36,20 @@ describe('Forwarder', function () {
     );
     const forwarderAddress = await forwarder.getAddress();
 
-    // deploy an erc20
-    const ERC20 = await hre.ethers.getContractFactory('TestToken');
-    const erc20 = await ERC20.deploy(hre.ethers.parseEther('1000'));
-    const erc20Address = await erc20.getAddress();
+    // fund with USDC
+    const whaleToken = await hre.ethers.getContractAt("IERC20", config.WHALE_TOKEN);
+    await whileImpersonating(hre, config.WHALE, async (signer) => {
+      await whaleToken.connect(signer).transfer(forwarderAddress, "1000000000");
+    })
+
 
     return {
       forwarder,
       forwarderAddress,
       owner,
       forwardTo,
-      erc20,
-      erc20Address,
+      config,
+      whaleToken
     };
   }
 
@@ -58,77 +61,36 @@ describe('Forwarder', function () {
     });
   });
 
-
-  describe('Flush erc20', function () {
-    it('Should transfer the funds to the forwardTo address no matter the sender', async function () {
-      const {
-        forwarder,
-        forwarderAddress,
-        owner,
-        forwardTo,
-        erc20,
-        erc20Address,
-      } = await loadFixture(deployFixture);
-
-      // send some erc20 to the forwarder
-      await erc20
-        .connect(owner)
-        .transfer(forwarderAddress, hre.ethers.parseEther('1.0'));
-
-      // forward the funds
-      await forwarder.connect(owner).flushToken(erc20Address);
-
-      // check the balances
-      expect(await erc20.balanceOf(forwardTo.address)).to.equal(
-        hre.ethers.parseEther('1.0'),
-      );
-      expect(await erc20.balanceOf(forwarderAddress)).to.equal(0);
-    });
-
-    it('Should emit a Flush event', async function () {
-      const {
-        forwarder,
-        forwarderAddress,
-        owner,
-        forwardTo,
-        erc20,
-        erc20Address,
-      } = await loadFixture(deployFixture);
-
-      // send some erc20 to the forwarder
-      await erc20
-        .connect(owner)
-        .transfer(forwarderAddress, hre.ethers.parseEther('1.0'));
-
-      // forward the funds
-      await forwarder.connect(owner).flushToken(erc20Address);
-
-      // check the event
-      const events = await forwarder.queryFilter(
-        forwarder.filters[
-          'ForwarderFlushed(address,uint256)'
-        ](),
-      );
-      expect(events).to.have.lengthOf(1);
-      expect(events[0].args[0]).to.equal(erc20Address);
-      expect(events[0].args[1]).to.equal(hre.ethers.parseEther('1.0'));
-    });
-  });
-
   describe("Flush with native", function () {
-    // TODO:
+    it("Should flush with native", async function () {
+      const { forwarder, forwardTo, config, whaleToken } = await loadFixture(deployFixture);
+
+      const ethBalanceBefore = await hre.ethers.provider.getBalance(forwardTo.address);
+      const tokenBalanceBefore = await whaleToken.balanceOf(forwardTo.address);
+
+      await expect(forwarder.flushTokenWithNative(await whaleToken.getAddress(), "10000000", 0))
+        .not.to.be.reverted;
+
+      const ethBalanceAfter = await hre.ethers.provider.getBalance(forwardTo.address);
+      const tokenBalanceAfter = await whaleToken.balanceOf(forwardTo.address);
+
+      expect(ethBalanceAfter).to.be.greaterThan(ethBalanceBefore);
+      expect(tokenBalanceAfter).to.be.equal(tokenBalanceBefore + BigInt("10000000"));
+    })
   })
 
   describe("Native flush", function () {
-    it("Native should be automatically flushed", async function () {
-      const { forwarderAddress, owner, forwardTo } = await loadFixture(deployFixture);
+    it("Should flush native to forwardTo", async function () {
+      const { forwarder, forwarderAddress, owner, forwardTo } = await loadFixture(deployFixture);
       const balanceBefore = await hre.ethers.provider.getBalance(forwardTo);
 
       await owner.sendTransaction({
         to: forwarderAddress,
         value: hre.ethers.parseEther('1.0'),
       });
-      
+
+      await forwarder.flushNative(hre.ethers.parseEther('1.0'));
+
       const balanceAfter = await hre.ethers.provider.getBalance(forwardTo);
       expect(balanceAfter).to.be.greaterThan(balanceBefore);
     })

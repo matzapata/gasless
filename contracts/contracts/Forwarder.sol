@@ -33,8 +33,17 @@ contract Forwarder is IForwarder {
         emit ForwarderFlushed(token, amount);
     }
 
+    function flushNative(uint256 amount) external {
+        (bool success, ) = FORWARD_TO.call{value: amount}("");
+        if (success == false) {
+            revert FailedEthTransfer(FORWARD_TO, amount);
+        }
+
+        emit ForwarderFlushed(address(0), amount);
+    }
+
     /// @inheritdoc	IForwarder
-    function flushWithNative(
+    function flushTokenWithNative(
         address token,
         uint256 amount,
         uint256 minRelayerFee
@@ -47,6 +56,8 @@ contract Forwarder is IForwarder {
         }
 
         uint24 swapFee = GAS_STATION.getSwapFee();
+
+        IERC20(token).approve(address(SWAP_ROUTER), amount);
 
         // swap token for weth
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
@@ -77,6 +88,9 @@ contract Forwarder is IForwarder {
             revert FailedEthTransfer(FORWARD_TO, forwardAmount);
         }
 
+        // send token to forwardTo
+        IERC20(token).transfer(FORWARD_TO, amount);
+
         // send fee to relayer
         (success, ) = msg.sender.call{value: relayerFee}("");
         if (success == false) {
@@ -85,13 +99,5 @@ contract Forwarder is IForwarder {
     }
 
     /// @inheritdoc	IForwarder
-    receive() external payable {
-        uint256 balance = address(this).balance;
-        (bool success, ) = FORWARD_TO.call{value: balance}("");
-        if (success == false) {
-            revert FailedEthTransfer(FORWARD_TO, balance);
-        }
-
-        emit ForwarderFlushed(address(0), balance);
-    }
+    receive() external payable {}
 }

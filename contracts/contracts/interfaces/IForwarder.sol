@@ -35,11 +35,17 @@ interface IForwarder is IForwarderErrors, IForwarderEvents {
     /// @param amount The amount to be flushed
     function flushToken(address token, uint256 amount) external;
 
+
+    /// @notice Flushes amount of native to forwardTo
+    /// @dev Ment as a security for users to take tokens away
+    /// @param amount The amount to be flushed
+    function flushNative(uint256 amount) external;
+
     /// @notice Swaps amount of token to native and sends it allong with remaining token to forwardTo
     /// @param token The token to be flushed
     /// @param amount The amount to be swapt for native
     /// @param minRelayerFee The minimum relayer fee. Limited on maximum to the fee set by GasStation
-    function flushWithNative(
+    function flushTokenWithNative(
         address token,
         uint256 amount,
         uint256 minRelayerFee
