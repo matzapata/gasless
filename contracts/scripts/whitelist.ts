@@ -11,6 +11,7 @@ async function main(tokenAddress: string, whitelisted: boolean) {
 }
 
 const [, , tokenAddress, whitelisted] = process.argv
+
 main(tokenAddress, whitelisted == "true")
     .then(() => process.exit(0))
     .catch((error) => {
