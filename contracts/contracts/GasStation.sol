@@ -36,6 +36,7 @@ contract GasStation is Ownable, IGasStation {
         }
     }
 
+    /// @inheritdoc	IGasStation
     function whitelistToken(
         address token,
         bool whitelisted
@@ -43,28 +44,34 @@ contract GasStation is Ownable, IGasStation {
         tokensWhitelist[token] = whitelisted;
     }
 
+    /// @inheritdoc	IGasStation
     function isWhitelisted(address token) public view returns (bool) {
         return tokensWhitelist[token];
     }
 
+    /// @inheritdoc	IGasStation
     function setRelayerFee(uint256 _fee) external onlyOwner {
         RELAYER_FEE = _fee;
 
         emit FeeUpdate(_fee);
     }
 
+    /// @inheritdoc	IGasStation
     function getRelayerFee() external view returns (uint256) {
         return RELAYER_FEE;
     }
 
+    /// @inheritdoc	IGasStation
     function setSwapFee(uint24 _fee) external onlyOwner {
         SWAP_FEE = _fee;
     }
 
+    /// @inheritdoc	IGasStation
     function getSwapFee() external view returns (uint24) {
         return SWAP_FEE;
     }
 
+    /// @inheritdoc	IGasStation
     function quoteSwapForEth(
         address token, // Address of the ERC-20 token contract
         uint256 amount // Amount of tokens to pull
@@ -84,7 +91,7 @@ contract GasStation is Ownable, IGasStation {
         return (amountOut, RELAYER_FEE);
     }
 
-    // Function to pull tokens from the user using permit and send ETH
+    /// @inheritdoc	IGasStation
     function swapForEth(
         address from, // Address owner of the erc20
         address token, // Address of the ERC-20 token contract
@@ -111,6 +118,7 @@ contract GasStation is Ownable, IGasStation {
 
         // Transfer the approved tokens from the user to this contract
         IERC20WithPermit(token).transferFrom(from, address(this), amount);
+       
         IERC20WithPermit(token).approve(address(SWAP_ROUTER), amount);
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
@@ -143,6 +151,6 @@ contract GasStation is Ownable, IGasStation {
         require(success, "ETH transfer to relayer failed");
     }
 
-    // Allow the contract to receive ETH after unwrapping WETH
+    /// @inheritdoc	IGasStation
     receive() external payable {}
 }
