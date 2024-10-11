@@ -1,0 +1,186 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x3201147D96319Ae6CaD163865d878478117252C4",
+      "txHash": "0x07ecacac1e8d1676fbfc792435751dc866c9b40807f8d8ca25d07bf52a9f9ada",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xAa4731bea48A652649805C22b8aEF7A6c38A6D0c",
+      "txHash": "0xfd40f39a77764d5db7308d892f8ed0a49704608f6527e21e5f04473f3cb88d13",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x8eAe8c7840d5F0D0646c9c07758c8E742b452a30",
+      "txHash": "0xc47d74d2a9c872de342569b9b85c41c525f00cef6ca544af7252a37fc6700926",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "2d3c02da76c6bce454b1fe06a7b574dbbeab220206336436e597e59a452f6e10": {
+      "address": "0x34C2aa9C501D145B378842F0bD5bAda3c06b2DD7",
+      "txHash": "0xe821eb97434230e0fb84ac517082555a5f9c9870d651fb1a2de83db5165ecaea",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:12"
+          },
+          {
+            "label": "owner",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:14"
+          },
+          {
+            "label": "SWAP_FEE",
+            "offset": 21,
+            "slot": "0",
+            "type": "t_uint24",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:16"
+          },
+          {
+            "label": "RELAYER_FEE",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:17"
+          },
+          {
+            "label": "WETH",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:19"
+          },
+          {
+            "label": "SWAP_QUOTER",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_contract(IQuoter)979",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:20"
+          },
+          {
+            "label": "SWAP_ROUTER",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_contract(ISwapRouter)1075",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:21"
+          },
+          {
+            "label": "tokensWhitelist",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "GasStation",
+            "src": "contracts/GasStation.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IQuoter)979": {
+            "label": "contract IQuoter",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISwapRouter)1075": {
+            "label": "contract ISwapRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_uint24": {
+            "label": "uint24",
+            "numberOfBytes": "3"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "246ada32e1d622e985097403c6065b4aefd7d14266758f78bc9b247b12357f15": {
+      "address": "0x6C134dDA7Fa4097B2dCa32D983e7A42bB63f45b4",
+      "txHash": "0xb69f8ca245a06aaf98878a205c6edc7f68285785d0b05ff8eacf8223ec092747",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "WETH",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IWETH)827",
+            "contract": "ForwarderFactory",
+            "src": "contracts/ForwarderFactory.sol:8"
+          },
+          {
+            "label": "GAS_STATION",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IGasStation)723",
+            "contract": "ForwarderFactory",
+            "src": "contracts/ForwarderFactory.sol:9"
+          },
+          {
+            "label": "SWAP_ROUTER",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(ISwapRouter)819",
+            "contract": "ForwarderFactory",
+            "src": "contracts/ForwarderFactory.sol:10"
+          },
+          {
+            "label": "initialized",
+            "offset": 20,
+            "slot": "2",
+            "type": "t_bool",
+            "contract": "ForwarderFactory",
+            "src": "contracts/ForwarderFactory.sol:12"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IGasStation)723": {
+            "label": "contract IGasStation",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISwapRouter)819": {
+            "label": "contract ISwapRouter",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IWETH)827": {
+            "label": "contract IWETH",
+            "numberOfBytes": "20"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}

@@ -25,7 +25,8 @@ describe("GasStation", function () {
     }
 
     const GasStation = await hre.ethers.getContractFactory("GasStation");
-    const gasStation = await GasStation.deploy(
+    const gasStation = await GasStation.deploy();
+    await gasStation.initialize(
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
@@ -102,23 +103,25 @@ describe("GasStation", function () {
     })
 
     it("Should revert if token is not whitelisted", async () => {
-      const { gasStation, user, relayer, config, OTHER } = await loadFixture(deployMainnetForkFixture);
+      const { gasStation, user, relayer, config, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
       const gasStationAddress = await gasStation.getAddress()
       const amount = BigInt("10000000")
       const relayerMinFee = config.RElAYER_FEE;
-      const token = OTHER.address;
+
+      // remove token from whitelist
+      await expect(gasStation.whitelistToken(WHALE_TOKEN.address, false)).to.not.be.reverted
 
       // permit contract to withdraw token
       const { v, r, s, deadline } = await getPermitSignature(
         user,
-        token,
+        WHALE_TOKEN.address,
         gasStationAddress,
         amount,
       )
 
       await expect(gasStation.connect(relayer).swapForEth(
         user.address,
-        token,
+        WHALE_TOKEN.address,
         amount,
         relayerMinFee,
         deadline,
@@ -185,9 +188,14 @@ describe("GasStation", function () {
 
   describe("quoteSwapForEth", function () {
     it("Should quote swap for eth", async () => {
-      const { gasStation, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
+      const { gasStation, relayer, WHALE_TOKEN } = await loadFixture(deployMainnetForkFixture);
+      const amount = BigInt("1000000000")
+      const token = WHALE_TOKEN.address;
 
-      const [amountOut, relayerFee] = await gasStation.quoteSwapForEth(WHALE_TOKEN.address, 10000000);
+      const [amountOut, relayerFee] = await gasStation.connect(relayer).quoteSwapForEth(
+        token,
+        amount,
+      )
 
       expect(amountOut).to.be.greaterThan(0)
       expect(relayerFee).to.be.greaterThan(0)

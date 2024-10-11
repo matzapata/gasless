@@ -8,23 +8,32 @@ import {IERC20WithPermit} from "./interfaces/IERC20WithPermit.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IGasStation, IGasStationEvents} from "./interfaces/IGasStation.sol";
 
-contract GasStation is Ownable, IGasStation {
+contract GasStation is IGasStation {
+    bool private initialized;
+
+    address public owner;
+
     uint24 internal SWAP_FEE;
     uint256 internal RELAYER_FEE;
-    address public immutable WETH;
-    ISwapRouter public immutable SWAP_ROUTER;
-    IQuoter public immutable SWAP_QUOTER;
+
+    address public WETH;
+    IQuoter public SWAP_QUOTER;
+    ISwapRouter public SWAP_ROUTER;
 
     mapping(address => bool) internal tokensWhitelist; // whitelist of available tokens (must support permit)
 
-    constructor(
+    function initialize(
         ISwapRouter _swapRouter,
         IQuoter _swapQuoter,
         address _weth,
         address[] memory _tokensWhitelist,
         uint256 _relayerFee,
         uint24 _swapFee
-    ) Ownable(msg.sender) {
+    ) external {
+        require(!initialized, "Already initialized");
+        initialized = true;
+
+        owner = msg.sender;
         WETH = _weth;
         RELAYER_FEE = _relayerFee;
         SWAP_ROUTER = _swapRouter;
@@ -34,6 +43,12 @@ contract GasStation is Ownable, IGasStation {
         for (uint i = 0; i < _tokensWhitelist.length; i++) {
             tokensWhitelist[_tokensWhitelist[i]] = true;
         }
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+
+        _;
     }
 
     /// @inheritdoc	IGasStation
@@ -85,8 +100,12 @@ contract GasStation is Ownable, IGasStation {
                 sqrtPriceLimitX96: 0
             });
 
-        (uint256 amountOut, , , ) = /* uint160 sqrtPriceX96After */ /* uint32 initializedTicksCrossed */ /* uint256 gasEstimate */
-        SWAP_QUOTER.quoteExactInputSingle(params);
+        (
+            uint256 amountOut /* uint160 sqrtPriceX96After */ /* uint32 initializedTicksCrossed */ /* uint256 gasEstimate */,
+            ,
+            ,
+
+        ) = SWAP_QUOTER.quoteExactInputSingle(params);
 
         return (amountOut, RELAYER_FEE);
     }
@@ -118,7 +137,7 @@ contract GasStation is Ownable, IGasStation {
 
         // Transfer the approved tokens from the user to this contract
         IERC20WithPermit(token).transferFrom(from, address(this), amount);
-       
+
         IERC20WithPermit(token).approve(address(SWAP_ROUTER), amount);
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter

@@ -5,19 +5,37 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useAccount, useReadContract } from "wagmi";
+import { ERC20_ABI } from "@/config/abis/ERC20";
 
 export default function TokenSelect(props: {
   value: Token;
   options: Token[];
   onSelect: (token: Token) => void;
 }) {
+  const account = useAccount();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const filteredOptions = props.options.filter((option) =>
     option.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const { data: balance, isLoading } = useReadContract({
+    address: props.value.address,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [account.address],
+  });
+
+  const decimalBalance = useMemo(() => {
+    if (balance) {
+      return Number(balance.toString()) / 10 ** props.value.decimals;
+    } else {
+      return 0;
+    }
+  }, [balance, props.value]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -29,8 +47,12 @@ export default function TokenSelect(props: {
               <span className="block text-sm font-medium uppercase">
                 {props.value.symbol}
               </span>
-              <span className="block text-xs text-muted-foreground">
-                Balance: 0
+              <span
+                className={cn("block text-xs text-muted-foreground", {
+                  "animate-pulse": isLoading,
+                })}
+              >
+                Balance: {isLoading ? "..." : decimalBalance}
               </span>
             </div>
           </div>

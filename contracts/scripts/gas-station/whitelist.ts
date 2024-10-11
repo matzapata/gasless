@@ -1,9 +1,13 @@
 import { ethers } from "hardhat";
+import { buildDeploymentPath } from "../utils/build-deployment-path";
+import { EnvVar, useEnv } from "../../common/env";
 
-const PROXY_ADDRESS = require("../deployments/GasStation.json").address;
 
 async function main(tokenAddress: string, whitelisted: boolean) {
-    const gasStation = await ethers.getContractAt("GasStation", PROXY_ADDRESS);
+    const chainId = Number(useEnv(EnvVar.CHAIN_ID))
+    const proxyAddress = require(buildDeploymentPath(chainId, 'GasStation')).address;
+    
+    const gasStation = await ethers.getContractAt("GasStation", proxyAddress);
 
     const tx = await gasStation.whitelistToken(tokenAddress, whitelisted);
     await tx.wait();

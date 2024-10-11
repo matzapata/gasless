@@ -5,11 +5,16 @@ import "./Forwarder.sol";
 import "./interfaces/IForwarderFactory.sol";
 
 contract ForwarderFactory is IForwarderFactory {
-    IWETH public immutable WETH;
-    IGasStation public immutable GAS_STATION;
-    ISwapRouter public immutable SWAP_ROUTER;
+    IWETH public WETH;
+    IGasStation public GAS_STATION;
+    ISwapRouter public SWAP_ROUTER;
 
-    constructor(IGasStation _gasStation, IWETH _weth, ISwapRouter _swapRouter) {
+    bool private initialized;
+
+    function initialize(IGasStation _gasStation, IWETH _weth, ISwapRouter _swapRouter) external {
+        require(!initialized, "Already initialized");
+        initialized = true;
+
         WETH = _weth;
         GAS_STATION = _gasStation;
         SWAP_ROUTER = _swapRouter;

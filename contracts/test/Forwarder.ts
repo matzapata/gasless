@@ -17,14 +17,15 @@ describe('Forwarder', function () {
 
     // deploy the gas station
     const GasStation = await hre.ethers.getContractFactory("GasStation");
-    const gasStation = await GasStation.deploy(
+    const gasStation = await GasStation.deploy();
+    await gasStation.initialize(
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
       [],
       config.RElAYER_FEE,
       config.SWAP_FEE
-    );
+    )
 
     // deploy the forwarder
     const Forwarder = await hre.ethers.getContractFactory('Forwarder');

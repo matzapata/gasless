@@ -4,6 +4,9 @@ export enum EnvVar {
     CHAIN_ID = "CHAIN_ID",
     FORK_BLOCK = "FORK_BLOCK",
     OPT_RPC_URL = "OPT_RPC_URL",
+    POLYGON_RPC_URL = "POLYGON_RPC_URL",
+    PRIVATE_KEY = "PRIVATE_KEY",
+    POLYGONSCAN_API_KEY = "POLYGONSCAN_API_KEY",
 }
 
 export const useEnv = (key: EnvVar): string => {

@@ -16,7 +16,8 @@ describe('ForwarderFactory', function () {
 
     // deploy the gas station
     const GasStation = await hre.ethers.getContractFactory("GasStation");
-    const gasStation = await GasStation.deploy(
+    const gasStation = await GasStation.deploy();
+    await gasStation.initialize(
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
@@ -29,13 +30,15 @@ describe('ForwarderFactory', function () {
     const ForwarderFactory =
       await hre.ethers.getContractFactory('ForwarderFactory');
     const forwarderFactory = await ForwarderFactory.deploy(
+    );
+    await forwarderFactory.initialize(
       await gasStation.getAddress(),
       config.UNISWAP_WETH,
       config.UNISWAP_ROUTER,
     );
     const forwarderFactoryAddress = await forwarderFactory.getAddress();
 
-    return { forwarderFactory, forwarderFactoryAddress, owner, otherAccount };
+    return { forwarderFactory, forwarderFactoryAddress, owner, otherAccount, gasStation };
   }
 
   describe('computeAddress', function () {
@@ -56,12 +59,33 @@ describe('ForwarderFactory', function () {
       const { forwarderFactory, otherAccount } =
         await loadFixture(deployFixture);
 
-      const salt = sha3(Date.now());
+      try {
+        const tx = await forwarderFactory.createForwarder(
+          otherAccount.address,
+        );
+        await tx.wait();
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    it('Cost of deployment should be below fee', async function () {
+      const { forwarderFactory, otherAccount, gasStation } =
+        await loadFixture(deployFixture);
+
       try {
         const tx = await forwarderFactory.createForwarder(
           otherAccount.address,
         );
         const receipt = await tx.wait();
+        if (!receipt) {
+          throw new Error('No receipt');
+        }
+        const cost = receipt.gasUsed * receipt.gasPrice;
+        expect(cost).to.be.below(await gasStation.getRelayerFee());
+
+        console.log(`Cost: ${hre.ethers.formatEther(cost)} wei`);
+        console.log("Recommended fee greater than: ", cost);
       } catch (error) {
         console.log(error);
       }
