@@ -1,29 +1,51 @@
 import { shortenAddress } from "@/lib/strings";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { QRCode } from "react-qrcode-logo";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import ConnectButton from "./connect-button";
+import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
+import { getForwarderFactory } from "@/config/chains";
+import { useCopyToClipboard } from "@/hooks/use-copy";
 
 export default function DepositCard() {
   const account = useAccount();
+  const { copied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
+
+  const { data: forwarderAddress, isLoading } = useReadContract({
+    abi: ForwarderFactoryABI,
+    address: getForwarderFactory(account.chainId ?? 137),
+    functionName: "getForwarder",
+    args: [account.address],
+  });
 
   return (
     <div className="space-y-2">
-      {account.address ? (
+      {account.isConnected && isLoading ? (
         <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
-          <button className="bg-blue-100 w-min mx-auto px-4 rounded-full text-blue-600 flex justify-center items-center space-x-2">
+          <p className="text-center text-sm">Loading...</p>
+        </div>
+      ) : null}
+
+      {forwarderAddress ? (
+        <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
+          <button
+            disabled={copied}
+            onClick={() => copyToClipboard(forwarderAddress as string)}
+            className="bg-blue-100 w-min mx-auto px-4 rounded-full text-blue-700 flex justify-center items-center space-x-2 hover:opacity-80"
+          >
             <span className="text-blue-600 font-medium">
-              {shortenAddress("0x7aF08613Bd9E2111EbA13a2d5d08a9A0cF4d3307")}
+              {copied ? "Copied!" : shortenAddress(forwarderAddress as string)}
             </span>
             <ClipboardDocumentIcon className="h-4 w-4" />
           </button>
+
           <div className="flex justify-center">
             <QRCode
               id="qrCode"
-              value={"0x7aF08613Bd9E2111EbA13a2d5d08a9A0cF4d3307"}
+              value={forwarderAddress as string}
               size={300}
               bgColor={"#F1F5F9"}
-              // fgColor={"#2563E"} TODO:
+              fgColor={"#172554"}
               qrStyle="dots"
               ecLevel="M"
             />

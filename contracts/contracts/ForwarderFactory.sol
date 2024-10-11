@@ -5,27 +5,28 @@ import "./Forwarder.sol";
 import "./interfaces/IForwarderFactory.sol";
 
 contract ForwarderFactory is IForwarderFactory {
-    IWETH public WETH;
-    IGasStation public GAS_STATION;
-    ISwapRouter public SWAP_ROUTER;
-
     bool private initialized;
+    
+    IWETH public weth;
+    IGasStation public gasStation;
+    ISwapRouter public swapRouter;
+
 
     function initialize(IGasStation _gasStation, IWETH _weth, ISwapRouter _swapRouter) external {
         require(!initialized, "Already initialized");
         initialized = true;
 
-        WETH = _weth;
-        GAS_STATION = _gasStation;
-        SWAP_ROUTER = _swapRouter;
+        weth = _weth;
+        gasStation = _gasStation;
+        swapRouter = _swapRouter;
     }
 
     /// @inheritdoc	IForwarderFactory
     function createForwarder(address _forwardTo) public returns (address) {
         Forwarder _forwarder = new Forwarder{salt: _computeSalt(_forwardTo)}(
-            GAS_STATION,
-            WETH,
-            SWAP_ROUTER,
+            gasStation,
+            weth,
+            swapRouter,
             _forwardTo
         );
 
@@ -38,7 +39,7 @@ contract ForwarderFactory is IForwarderFactory {
     function getForwarder(address _forwardTo) public view returns (address) {
         bytes memory bytecode = abi.encodePacked(
             type(Forwarder).creationCode,
-            abi.encode(GAS_STATION, WETH, SWAP_ROUTER, _forwardTo)  
+            abi.encode(gasStation, weth, swapRouter, _forwardTo)  
         );
         bytes32 fHash = keccak256(
             abi.encodePacked(

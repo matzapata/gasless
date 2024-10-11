@@ -3,13 +3,13 @@ import "@rainbow-me/rainbowkit/styles.css";
 import type { AppProps } from "next/app";
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { optimism } from "wagmi/chains";
+import {  polygon } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const config = getDefaultConfig({
   appName: "AllForGas",
   projectId: "YOUR_PROJECT_ID",
-  chains: [optimism],
+  chains: [polygon],
   ssr: true, 
 });
 
