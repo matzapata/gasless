@@ -1,33 +1,39 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "./Forwarder.sol";
-import "./interfaces/IForwarderFactory.sol";
+import {Forwarder} from "./Forwarder.sol";
+import {IWeth} from "./interfaces/IWeth.sol";
+import {IForwarder} from "./interfaces/IForwarder.sol";
+import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
+import {IQuoter} from "./interfaces/IQuoter.sol";
+import {IForwarderFactory} from "./interfaces/IForwarderFactory.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract ForwarderFactory is IForwarderFactory {
-    bool private initialized;
-    
-    IWETH public weth;
-    IGasStation public gasStation;
+    IWeth public weth;
     ISwapRouter public swapRouter;
+    IQuoter public swapQuoter;
+    IForwarder public implementation;
 
-
-    function initialize(IGasStation _gasStation, IWETH _weth, ISwapRouter _swapRouter) external {
-        require(!initialized, "Already initialized");
-        initialized = true;
-
-        weth = _weth;
-        gasStation = _gasStation;
+    constructor(ISwapRouter _swapRouter, IQuoter _swapQuoter, IWeth _weth) {
         swapRouter = _swapRouter;
+        swapQuoter = _swapQuoter;
+        weth = _weth;
+
+        implementation = new Forwarder();
     }
 
     /// @inheritdoc	IForwarderFactory
     function createForwarder(address _forwardTo) public returns (address) {
-        Forwarder _forwarder = new Forwarder{salt: _computeSalt(_forwardTo)}(
-            gasStation,
-            weth,
+        address _forwarder = Clones.cloneDeterministic(
+            address(implementation),
+            _computeSalt(_forwardTo)
+        );
+        IForwarder(payable(_forwarder)).initialize(
+            _forwardTo,
             swapRouter,
-            _forwardTo
+            swapQuoter,
+            weth
         );
 
         emit ForwarderCreated(address(_forwarder), _forwardTo);
@@ -37,20 +43,11 @@ contract ForwarderFactory is IForwarderFactory {
 
     /// @inheritdoc	IForwarderFactory
     function getForwarder(address _forwardTo) public view returns (address) {
-        bytes memory bytecode = abi.encodePacked(
-            type(Forwarder).creationCode,
-            abi.encode(gasStation, weth, swapRouter, _forwardTo)  
-        );
-        bytes32 fHash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _computeSalt(_forwardTo),
-                keccak256(bytecode)
-            )
-        );
-
-        return address(uint160(uint(fHash)));
+        return
+            Clones.predictDeterministicAddress(
+                address(implementation),
+                _computeSalt(_forwardTo)
+            );
     }
 
     function _computeSalt(address _forwardTo) internal pure returns (bytes32) {

@@ -2,6 +2,6 @@
 pragma solidity ^0.8.0;
 
 // WETH withdraw interface
-interface IWETH {
+interface IWeth {
     function withdraw(uint wad) external;
 }

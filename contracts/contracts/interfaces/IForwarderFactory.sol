@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-interface IForwarderFactoryErrors {}
+interface IForwarderFactoryErrors {
+    /// @notice Error if contract already initialized
+    error AlreadyInitialized();
+}
 
 interface IForwarderFactoryEvents {
     /// @notice Emitted when a forwarder is created
