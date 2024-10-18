@@ -7,11 +7,11 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 export default function Home() {
   return (
     <div>
-      <header className="text-center max-w-md mx-auto py-6 px-4 space-y-2">
+      {/* <header className="text-center max-w-md mx-auto py-6 px-4 space-y-2">
         <h1 className="text-xl font-medium">AllForGas</h1>
         <p className="text-muted-foreground text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-      </header>
-      
+      </header> */}
+
       <div className="flex justify-center py-10">
         <Tabs defaultValue="deposit" className="w-[450px]">
           <div className="flex justify-between items-center">

@@ -2,19 +2,18 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { SearchIcon, X } from "lucide-react";
+import { Coins, SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
 import { useMemo, useState } from "react";
-import { useAccount, useReadContract } from "wagmi";
-import { ERC20_ABI } from "@/config/abis/ERC20";
 
 export default function TokenSelect(props: {
   value: Token;
+  balance?: bigint;
+  loading?: boolean;
   options: Token[];
   onSelect: (token: Token) => void;
 }) {
-  const account = useAccount();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -22,37 +21,39 @@ export default function TokenSelect(props: {
     option.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const { data: balance, isLoading } = useReadContract({
-    address: props.value.address,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: [account.address],
-  });
-
   const decimalBalance = useMemo(() => {
-    if (balance) {
-      return Number(balance.toString()) / 10 ** props.value.decimals;
+    if (props.balance) {
+      return Number(props.balance.toString()) / 10 ** props.value.decimals;
     } else {
       return 0;
     }
-  }, [balance, props.value]);
+  }, [props.balance, props.value]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className="w-full">
         <button className="bg-muted rounded-t-lg flex justify-between items-center w-full px-4 py-3">
           <div className="flex items-center space-x-3">
-            <img src={props.value.image} className="h-9 w-9" />
+            <div className="h-9 w-9 rounded-full bg-muted flex justify-center items-center">
+              {props.value.image ? (
+                <img
+                  src={props.value.image}
+                  className="h-9 w-9 rounded-full bg-gray-100"
+                />
+              ) : (
+                <Coins className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
             <div className="text-left">
               <span className="block text-sm font-medium uppercase">
                 {props.value.symbol}
               </span>
               <span
                 className={cn("block text-xs text-muted-foreground", {
-                  "animate-pulse": isLoading,
+                  "animate-pulse": props.loading,
                 })}
               >
-                Balance: {isLoading ? "..." : decimalBalance}
+                Balance: {props.loading ? "..." : decimalBalance}
               </span>
             </div>
           </div>
@@ -118,7 +119,16 @@ function TokenButton(props: {
         props.className
       )}
     >
-      <img src={props.token.image} className="h-10 w-10" />
+      <div className="h-10 w-10 rounded-full bg-muted flex justify-center items-center">
+        {props.token.image ? (
+          <img
+            src={props.token.image}
+            className="h-10 w-10 rounded-full bg-gray-100"
+          />
+        ) : (
+          <Coins className="h-4 w-4 text-muted-foreground" />
+        )}
+      </div>
       <div className="text-left">
         <span className="block text-base font-medium">{props.token.name}</span>
         <span className="block text-sm text-muted-foreground">

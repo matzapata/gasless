@@ -7,16 +7,35 @@ import {
 } from "@/components/ui/collapsible";
 import { useMemo, useState } from "react";
 import TokenSelect from "./token-select";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
 import ConnectButton from "./connect-button";
+import { ERC20_ABI } from "@/config/abis/ERC20";
+import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
+import { getForwarderFactory } from "@/config/chains";
 
 export default function Withdraw() {
   const account = useAccount();
+  const chainId = account.chainId ?? 137;
+
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [estimation,] = useState();
-  const [token, setToken] = useState<Token>(tokens[10][0] as Token);
+  const [estimation] = useState();
+  const [token, setToken] = useState<Token>(tokens[chainId][0] as Token);
+
+  const forwarderAddress = useReadContract({
+    abi: ForwarderFactoryABI,
+    address: getForwarderFactory(chainId),
+    functionName: "getForwarder",
+    args: [account.address],
+  });
+
+  const balance = useReadContract({
+    address: token.address,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [forwarderAddress.data as string],
+  });
 
   const isWithdrawDisabled = useMemo(
     () => amount === "" || Number(amount) <= 0 || !account.address,
@@ -24,14 +43,25 @@ export default function Withdraw() {
   );
 
   const isChainSupported = useMemo(
-    () => !!account.chain && account.chain.id === 10,
+    () => !!account.chain && account.chain.id === 137,
     [account.chain]
   );
+
+  // TODO: estimate function
+  // const quote = useReadContract({
+  //   abi: GasStationAbi,
+  //   address: ,
+  // })
 
   return (
     <div className="space-y-2">
       <div className="space-y-1">
-        <TokenSelect value={token} onSelect={setToken} options={tokens[10]} />
+        <TokenSelect
+          value={token}
+          balance={BigInt(balance.data as string ?? 0)}
+          onSelect={setToken}
+          options={tokens[chainId]}
+        />
         <div className="bg-muted px-4 py-3 rounded-b-xl">
           <span className="text-sm text-muted-foreground">Sell for ETH</span>
           <input
@@ -48,7 +78,7 @@ export default function Withdraw() {
       <ConnectButton />
 
       {account.isConnected && isChainSupported && (
-        <Button disabled={isWithdrawDisabled} className="w-full" size={"lg"}>
+        <Button disabled={isWithdrawDisabled} className="w-full bg-blue-500 font-medium" size={"lg"}>
           {isWithdrawDisabled ? "Enter amount" : "Withdraw"}
         </Button>
       )}
