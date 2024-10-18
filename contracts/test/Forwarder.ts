@@ -15,27 +15,16 @@ describe('Forwarder', function () {
       throw new Error(`No config for chainId ${chainId}`);
     }
 
-    // deploy the gas station
-    const GasStation = await hre.ethers.getContractFactory("GasStation");
-    const gasStation = await GasStation.deploy();
-    await gasStation.initialize(
+    // deploy the forwarder
+    const Forwarder = await hre.ethers.getContractFactory('Forwarder');
+    const forwarder = await Forwarder.deploy();
+    const forwarderAddress = await forwarder.getAddress();
+    await forwarder.initialize(
+      forwardTo.address,
       config.UNISWAP_ROUTER,
       config.UNISWAP_QUOTER,
       config.UNISWAP_WETH,
-      [],
-      config.RElAYER_FEE,
-      config.SWAP_FEE
     )
-
-    // deploy the forwarder
-    const Forwarder = await hre.ethers.getContractFactory('Forwarder');
-    const forwarder = await Forwarder.deploy(
-      await gasStation.getAddress(),
-      config.UNISWAP_WETH,
-      config.UNISWAP_ROUTER,
-      forwardTo.address
-    );
-    const forwarderAddress = await forwarder.getAddress();
 
     // fund with USDC
     const whaleToken = await hre.ethers.getContractAt("IERC20", config.WHALE_TOKEN);
@@ -58,7 +47,7 @@ describe('Forwarder', function () {
     it('Should set the right forwardTo', async function () {
       const { forwarder, forwardTo } = await loadFixture(deployFixture);
 
-      expect(await forwarder.forwardTo()).to.equal(forwardTo.address);
+      expect(await forwarder.getForwardTo()).to.equal(forwardTo.address);
     });
   });
 
@@ -69,8 +58,23 @@ describe('Forwarder', function () {
       const ethBalanceBefore = await hre.ethers.provider.getBalance(forwardTo.address);
       const tokenBalanceBefore = await whaleToken.balanceOf(forwardTo.address);
 
-      await expect(forwarder.flushTokenWithNative(await whaleToken.getAddress(), "10000000", 0))
-        .not.to.be.reverted;
+      // assemble params
+      const token = await whaleToken.getAddress();
+      const amount = 10000000n;
+      const amountOutMinimum = 1000000n / 97n * 100n;
+      const swapFee = 3000n; // 3000 bps = 0.3%
+
+      await expect(
+        forwarder.flushTokenWithNative(
+          token,
+          amount,
+          amountOutMinimum,
+          swapFee,
+          Date.now() + 1000 * 60 * 60 * 24,
+          0,
+          config.RElAYER_FEE
+        )
+      ).not.to.be.reverted;
 
       const ethBalanceAfter = await hre.ethers.provider.getBalance(forwardTo.address);
       const tokenBalanceAfter = await whaleToken.balanceOf(forwardTo.address);
