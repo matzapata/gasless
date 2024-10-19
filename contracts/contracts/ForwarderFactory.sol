@@ -21,6 +21,7 @@ contract ForwarderFactory is IForwarderFactory {
         weth = _weth;
 
         implementation = new Forwarder();
+        implementation.initialize(address(this), swapRouter, swapQuoter, weth);
     }
 
     /// @inheritdoc	IForwarderFactory

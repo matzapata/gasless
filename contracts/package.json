@@ -2,7 +2,8 @@
   "name": "hardhat-project",
   "scripts": {
     "test": "npx hardhat test",
-    "lint": "solhint 'contracts/**/*.sol'"
+    "lint": "solhint 'contracts/**/*.sol'",
+    "deploy:forwarder": "npx hardhat run ./scripts/forwarder/deploy.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "5.0.0",

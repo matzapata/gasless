@@ -63,7 +63,20 @@ interface IForwarder is IForwarderErrors, IForwarderEvents {
         uint104 sqrtPriceLimitX96,
         uint256 relayerFee
     ) external;
-
+    
+    /// @notice Estimates how much native will be received from a swap
+    /// @param token The token to be flushed
+    /// @param amount The amount to be swapt for native
+    /// @param swapFee uniswap param
+    /// @param sqrtPriceLimitX96 uniswap param
+    /// @return amountOut The amount of the received token
+    function quoteSwapForNative(
+        address token,
+        uint256 amount,
+        uint24 swapFee,
+        uint160 sqrtPriceLimitX96
+    ) external view returns (uint256); 
+    
     /// @notice Gets called when native is deposited. Should forward to forwardTo
     receive() external payable;
 }

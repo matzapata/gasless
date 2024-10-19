@@ -3,9 +3,7 @@ import { EnvVar, useEnv } from '../../common/env';
 import { buildDeploymentPath } from '../utils/build-deployment-path';
 
 const CHAIN_ID = Number(useEnv(EnvVar.CHAIN_ID))
-const GAS_STATION_ADDRESS = require(buildDeploymentPath(CHAIN_ID, 'GasStation')).address;
 const FORWARDER_FACTORY_ADDRESS = require(buildDeploymentPath(CHAIN_ID, 'ForwarderFactory')).address;
-
 
 async function isDeployed(address: string) {
     const code = await hre.ethers.provider.getCode(address);
@@ -17,9 +15,6 @@ async function estimate(
     token: string,
     sellForEth: bigint
 ) {
-    const gasPrice = (await hre.ethers.provider.getFeeData()).gasPrice ?? BigInt(0);
-
-    const gasStation = await hre.ethers.getContractAt("GasStation", GAS_STATION_ADDRESS)
     const forwarderFactory = await hre.ethers.getContractAt("ForwarderFactory", FORWARDER_FACTORY_ADDRESS)
 
     const forwarderAddress = await forwarderFactory.getForwarder(user);
@@ -28,15 +23,35 @@ async function estimate(
     const deployed = await isDeployed(forwarderAddress);
     console.log("forwarder deployed:", deployed);
 
-    const deploymentGas = await forwarderFactory.createForwarder.estimateGas(user)
-    console.log("deploymentGas:", hre.ethers.formatEther(gasPrice * deploymentGas))
+    // gas estimation for withdrawal
+    const gasPrice = (await hre.ethers.provider.getFeeData()).gasPrice ?? BigInt(0);
+    if (deployed) {
+        const forwarder = await hre.ethers.getContractAt("Forwarder", forwarderAddress)
+        const ethOut = await forwarder.quoteSwapForNative(
+            token,
+            sellForEth,
+            3000n,
+            0
+        )
+        console.log("ETH Out:", hre.ethers.formatEther(ethOut))
 
-    const [ethOut, relayerFee] = await gasStation.quoteSwapForEth(
-        token,
-        sellForEth
-    )
-    console.log("ETH Out:", hre.ethers.formatEther(ethOut))
-    console.log("Max relayer fee:", hre.ethers.formatEther(relayerFee))
+        // TODO:
+    } else {
+        const deploymentGas = await forwarderFactory.createForwarder.estimateGas(user)
+        console.log("deploymentGas:", hre.ethers.formatEther(gasPrice * deploymentGas))
+       
+        const forwarderImplementation = await hre.ethers.getContractAt(
+            "Forwarder",
+            await forwarderFactory.implementation()
+        )
+        const ethOut = await forwarderImplementation.quoteSwapForNative(
+            token,
+            sellForEth,
+            3000n,
+            0
+        )
+        console.log("ETH Out:", hre.ethers.formatEther(ethOut))
+    }
 }
 
 estimate(

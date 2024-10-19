@@ -87,5 +87,15 @@ contract Forwarder is IForwarder, Swapper, Initializable {
     }
 
     /// @inheritdoc	IForwarder
+    function quoteSwapForNative(
+        address token,
+        uint256 amount,
+        uint24 swapFee,
+        uint160 sqrtPriceLimitX96
+    ) external view returns (uint256) {
+        return Swapper._quoteSwapForEth(token, amount, swapFee, sqrtPriceLimitX96);
+    }
+
+    /// @inheritdoc	IForwarder
     receive() external payable {}
 }
