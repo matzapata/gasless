@@ -1,20 +1,15 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { getUserForwarder } from "@/pkg/forwarder";
+import { getUserForwarder } from "@/lib/forwarder";
+import { type NextRequest } from 'next/server'
 
-type Data = {
-    forwarder?: string;
-    error?: string;
-};
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse<Data>,
-) {
-    const { userAddress, chainId } = req.query;
+export async function GET(req: NextRequest) {
+    const searchParams = req.nextUrl.searchParams
+    const userAddress = searchParams.get("userAddress")
+    const chainId = searchParams.get("chainId")
 
     // validations
     if (!userAddress || typeof userAddress !== "string" || !userAddress.startsWith("0x")) {
-        return res.status(400).json({ error: "Invalid request" });
+        return Response.json({ error: "Invalid request" }, { status: 400 });
     }
 
     try {
@@ -23,8 +18,8 @@ export default async function handler(
             userAddress: userAddress as `0x${string}`,
         });
 
-        res.status(200).json({ forwarder: userForwarder });
+        return Response.json({ forwarder: userForwarder });
     } catch (error) {
-        res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
+        return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 400 });
     }
 }

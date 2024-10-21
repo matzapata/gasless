@@ -1,6 +1,6 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
 import { erc20Abi, getContract } from "viem";
-import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts } from "./config";
+import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
 
@@ -39,12 +39,12 @@ export const quoteFlushTokenWithNative = async ({
     // make estmations
     let deploymentCost = BigInt(0);
     if (!isDeployed) {
-        deploymentCost = await provider.estimateContractGas({
+        deploymentCost = BigInt(await provider.estimateContractGas({
             abi: ForwarderFactoryABI,
             address: forwarderFactories[chainId],
             functionName: 'createForwarder',
             args: [userAddress],
-        }) * gasPrice;
+        }) * gasPrice);
     }
     const eth = await forwarderImplementation.read.quoteSwapForNative(
         [tokenAddress, amount, 3000n, 0],

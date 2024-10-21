@@ -1,22 +1,12 @@
-import "@/styles/globals.css";
+import "./globals.css";
+import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Header } from "./header";
 import Link from "next/link";
-import "@rainbow-me/rainbowkit/styles.css";
-import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { WagmiProvider } from "wagmi";
-import { polygon } from "wagmi/chains";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { ReactNode } from "react";
-
-const config = getDefaultConfig({
-  appName: "AllForGas",
-  projectId: "TODO:",
-  chains: [polygon],
-  ssr: true,
-});
-
-const queryClient = new QueryClient();
+import { Providers } from "./providers";
+import { cookieToInitialState } from "wagmi";
+import { headers } from "next/headers";
+import { getConfig } from "./wagmi";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,19 +18,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialState = cookieToInitialState(
+    getConfig(),
+    headers().get("cookie")
+  );
+
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head />
       <body className="relative min-h-screen bg-black bg-gradient-to-tr from-zinc-900/50 to-zinc-700/30">
         <Header />
 
-        <main className=" min-h-[80vh] ">{children}</main>
+        <Providers initialState={initialState}>
+          <main className="min-h-[80vh]">{children}</main>
+        </Providers>
 
         <footer className="bottom-0 border-t inset-2x-0 border-zinc-500/10">
           <div className="flex flex-col gap-1 px-6 py-12 mx-auto text-xs text-center text-zinc-700 max-w-7xl lg:px-8">
             <p>
               Built by{" "}
-              <Link href="https://twitter.com/chronark_" className="font-semibold duration-150 hover:text-zinc-200">
+              <Link
+                href="https://twitter.com/chronark_"
+                className="font-semibold duration-150 hover:text-zinc-200"
+              >
                 @chronark_
               </Link>
               and{" "}
@@ -51,7 +51,6 @@ export default function RootLayout({
                 many others{" "}
               </Link>
             </p>
-           
           </div>
         </footer>
       </body>

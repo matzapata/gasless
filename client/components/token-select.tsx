@@ -92,7 +92,7 @@ export const TokenSelect: React.FC<{
               <TokenButton
                 key={token.address}
                 token={token}
-                className="hover:bg-gray-100 w-full"
+                className="hover:opacity-80 w-full"
                 onClick={() => {
                   props.onSelect(token);
                   setOpen(false);
@@ -115,7 +115,7 @@ function TokenButton(props: {
     <button
       onClick={() => props.onClick()}
       className={cn(
-        "flex space-x-4 px-4 py-3 items-center hover:opacity-80 hover:bg-gray-100",
+        "flex space-x-4 px-4 py-3 items-center hover:opacity-80",
         props.className
       )}
     >

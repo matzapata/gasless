@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -58,8 +57,18 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
+  /* Remove spin buttons for number inputs in all modern browsers */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    @apply appearance-none; /* Tailwind utility to remove native appearance */
+    margin: 0;
+  }
+
+  input[type="number"] {
+    @apply appearance-none; /* For Firefox */
+  }
+}
 
 @layer base {
   * {
