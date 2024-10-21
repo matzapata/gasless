@@ -11,8 +11,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
 import ConnectButton from "./connect-button";
 import { ERC20_ABI } from "@/config/abis/ERC20";
-import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
-import { getForwarderFactory } from "@/config/chains";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Withdraw() {
   const account = useAccount();
@@ -23,13 +22,16 @@ export default function Withdraw() {
   const [estimation] = useState();
   const [token, setToken] = useState<Token>(tokens[chainId][0] as Token);
 
-  const forwarderAddress = useReadContract({
-    abi: ForwarderFactoryABI,
-    address: getForwarderFactory(chainId),
-    functionName: "getForwarder",
-    args: [account.address],
+  const { data: forwarderAddress } = useQuery({
+    queryKey: ["forwarder", account.address],
+    queryFn: () =>
+      fetch(
+        `/api/deposit?userAddress=${account.address}&chainId=${account.chainId}`
+      )
+        .then((res) => res.json())
+        .then((res) => res.forwarder),
+    enabled: !!account.address && !!account.chainId,
   });
-
   const balance = useReadContract({
     address: token.address,
     abi: ERC20_ABI,
@@ -46,12 +48,6 @@ export default function Withdraw() {
     () => !!account.chain && account.chain.id === 137,
     [account.chain]
   );
-
-  // TODO: estimate function
-  // const quote = useReadContract({
-  //   abi: GasStationAbi,
-  //   address: ,
-  // })
 
   return (
     <div className="space-y-2">

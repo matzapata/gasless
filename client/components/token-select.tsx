@@ -18,7 +18,7 @@ export default function TokenSelect(props: {
   const [search, setSearch] = useState("");
 
   const filteredOptions = props.options.filter((option) =>
-    option.name.toLowerCase().includes(search.toLowerCase())
+    option.symbol.toLowerCase().startsWith(search.toLowerCase())
   );
 
   const decimalBalance = useMemo(() => {

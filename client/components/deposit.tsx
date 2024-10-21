@@ -1,21 +1,24 @@
 import { shortenAddress } from "@/lib/strings";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { QRCode } from "react-qrcode-logo";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
 import ConnectButton from "./connect-button";
-import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
-import { getForwarderFactory } from "@/config/chains";
 import { useCopyToClipboard } from "@/hooks/use-copy";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DepositCard() {
   const account = useAccount();
   const { copied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
 
-  const { data: forwarderAddress, isLoading } = useReadContract({
-    abi: ForwarderFactoryABI,
-    address: getForwarderFactory(account.chainId ?? 137),
-    functionName: "getForwarder",
-    args: [account.address],
+  const { data: forwarderAddress, isLoading } = useQuery({
+    queryKey: ["forwarder", account.address],
+    queryFn: () =>
+      fetch(
+        `/api/deposit?userAddress=${account.address}&chainId=${account.chainId}`
+      )
+        .then((res) => res.json())
+        .then((res) => res.forwarder),
+    enabled: !!account.address && !!account.chainId,
   });
 
   return (

@@ -1,5 +1,36 @@
 export const ForwarderFactoryABI = [
     {
+        "inputs": [
+            {
+                "internalType": "contract ISwapRouter",
+                "name": "_swapRouter",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IQuoter",
+                "name": "_swapQuoter",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IWeth",
+                "name": "_weth",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "AlreadyInitialized",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ERC1167FailedCreateClone",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -17,45 +48,6 @@ export const ForwarderFactoryABI = [
         ],
         "name": "ForwarderCreated",
         "type": "event"
-    },
-    {
-        "inputs": [],
-        "name": "GAS_STATION",
-        "outputs": [
-            {
-                "internalType": "contract IGasStation",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "SWAP_ROUTER",
-        "outputs": [
-            {
-                "internalType": "contract ISwapRouter",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "WETH",
-        "outputs": [
-            {
-                "internalType": "contract IWETH",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
     },
     {
         "inputs": [
@@ -96,26 +88,55 @@ export const ForwarderFactoryABI = [
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "implementation",
+        "outputs": [
             {
-                "internalType": "contract IGasStation",
-                "name": "_gasStation",
-                "type": "address"
-            },
-            {
-                "internalType": "contract IWETH",
-                "name": "_weth",
-                "type": "address"
-            },
-            {
-                "internalType": "contract ISwapRouter",
-                "name": "_swapRouter",
+                "internalType": "contract IForwarder",
+                "name": "",
                 "type": "address"
             }
         ],
-        "name": "initialize",
-        "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "swapQuoter",
+        "outputs": [
+            {
+                "internalType": "contract IQuoter",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "swapRouter",
+        "outputs": [
+            {
+                "internalType": "contract ISwapRouter",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "weth",
+        "outputs": [
+            {
+                "internalType": "contract IWeth",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     }
 ]
