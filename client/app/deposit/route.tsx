@@ -1,8 +1,9 @@
+"use client";
 import { shortenAddress } from "@/lib/strings";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { QRCode } from "react-qrcode-logo";
 import { useAccount } from "wagmi";
-import ConnectButton from "./connect-button";
+import ConnectButton from "@/components/connect-button";
 import { useCopyToClipboard } from "@/hooks/use-copy";
 import { useQuery } from "@tanstack/react-query";
 
@@ -34,9 +35,9 @@ export default function DepositCard() {
           <button
             disabled={copied}
             onClick={() => copyToClipboard(forwarderAddress as string)}
-            className="bg-blue-100 w-min mx-auto px-4 rounded-full text-blue-700 flex justify-center items-center space-x-2 hover:opacity-80"
+            className="hover:text-accent-foreground text-secondary-foreground w-min mx-auto px-4 rounded-full flex justify-center items-center space-x-2"
           >
-            <span className="text-blue-600 font-medium">
+            <span className="font-medium">
               {copied ? "Copied!" : shortenAddress(forwarderAddress as string)}
             </span>
             <ClipboardDocumentIcon className="h-4 w-4" />
@@ -47,8 +48,8 @@ export default function DepositCard() {
               id="qrCode"
               value={forwarderAddress as string}
               size={300}
-              bgColor={"#F1F5F9"}
-              fgColor={"#172554"}
+              bgColor={"#262626"}
+              fgColor={"#71717a"}
               qrStyle="dots"
               ecLevel="M"
             />
@@ -69,10 +70,6 @@ export default function DepositCard() {
         </div>
       )}
       <ConnectButton />
-
-      {/* <div className="bg-muted px-4 py-3 space-y-4 rounded-xl text-sm text-center">
-        <p>If tokens are already in your wallet you can try to get gas through <span className="text-blue-600 underline cursor-pointer">permit</span></p>
-      </div> */}
     </div>
   );
 }

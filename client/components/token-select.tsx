@@ -7,13 +7,13 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
 import { useMemo, useState } from "react";
 
-export default function TokenSelect(props: {
+export const TokenSelect: React.FC<{
   value: Token;
   balance?: bigint;
   loading?: boolean;
   options: Token[];
   onSelect: (token: Token) => void;
-}) {
+}> = (props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -104,7 +104,7 @@ export default function TokenSelect(props: {
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 function TokenButton(props: {
   token: Token;

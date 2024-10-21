@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { deployForwarder, quoteFlushTokenWithNative, flushTokenWithNative } from "./lib/forwarder";
+import { deployForwarder, quoteFlushTokenWithNative, flushTokenWithNative } from "@/pkg/forwarder";
 
 type Data = {
   deployTx?: string;

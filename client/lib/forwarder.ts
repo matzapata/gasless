@@ -1,7 +1,7 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
 import { erc20Abi, getContract } from "viem";
 import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts } from "./config";
-import { forwarderImplementations } from "./config";
+import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
 
 export const quoteFlushTokenWithNative = async ({

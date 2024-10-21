@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
@@ -6,10 +7,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useMemo, useState } from "react";
-import TokenSelect from "./token-select";
+import { TokenSelect } from "@/components/token-select";
 import { useAccount, useReadContract } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
-import ConnectButton from "./connect-button";
+import ConnectButton from "@/components/connect-button";
 import { ERC20_ABI } from "@/config/abis/ERC20";
 import { useQuery } from "@tanstack/react-query";
 
@@ -36,7 +37,7 @@ export default function Withdraw() {
     address: token.address,
     abi: ERC20_ABI,
     functionName: "balanceOf",
-    args: [forwarderAddress.data as string],
+    args: [forwarderAddress?.data as string],
   });
 
   const isWithdrawDisabled = useMemo(
@@ -54,7 +55,7 @@ export default function Withdraw() {
       <div className="space-y-1">
         <TokenSelect
           value={token}
-          balance={BigInt(balance.data as string ?? 0)}
+          balance={BigInt((balance.data as string) ?? 0)}
           onSelect={setToken}
           options={tokens[chainId]}
         />
@@ -74,7 +75,11 @@ export default function Withdraw() {
       <ConnectButton />
 
       {account.isConnected && isChainSupported && (
-        <Button disabled={isWithdrawDisabled} className="w-full bg-blue-500 font-medium" size={"lg"}>
+        <Button
+          disabled={isWithdrawDisabled}
+          className="w-full  font-medium"
+          size={"lg"}
+        >
           {isWithdrawDisabled ? "Enter amount" : "Withdraw"}
         </Button>
       )}

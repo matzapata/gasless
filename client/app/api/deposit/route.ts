@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getUserForwarder } from "./lib/forwarder";
+import { getUserForwarder } from "@/pkg/forwarder";
 
 type Data = {
     forwarder?: string;
