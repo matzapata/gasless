@@ -9,7 +9,7 @@ export default function Home() {
             href="https://github.com/chronark/envshare"
             className="text-zinc-400 relative overflow-hidden rounded-full py-1.5 px-4 text-sm leading-6 ring-1 ring-zinc-100/10 hover:ring-zinc-100/30 duration-150"
           >
-            GetMeGas is Open Source on{" "}
+            Gassless is Open Source on{" "}
             <span className="font-semibold text-zinc-200">
               GitHub <span aria-hidden="true">&rarr;</span>
             </span>

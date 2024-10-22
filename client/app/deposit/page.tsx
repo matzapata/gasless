@@ -29,9 +29,7 @@ export default function DepositCard() {
           <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
             <p className="text-center text-sm">Loading...</p>
           </div>
-        ) : null}
-
-        {forwarderAddress ? (
+        ) : forwarderAddress ? (
           <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
             <button
               disabled={copied}
@@ -72,6 +70,7 @@ export default function DepositCard() {
             </p>
           </div>
         )}
+
         <ConnectButton />
       </div>
     </div>
