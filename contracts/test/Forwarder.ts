@@ -1,8 +1,9 @@
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { networkConfig } from '../common/config';
 import { whileImpersonating } from './utils/impersonating';
+import { authorizeFlush } from './utils/flush-auth';
 
 describe('Forwarder', function () {
   async function deployFixture() {
@@ -52,27 +53,31 @@ describe('Forwarder', function () {
   });
 
   describe("Flush with native", function () {
-    it("Should flush with native", async function () {
+    it("Should flush with native when called by relayer with auth signature", async function () {
       const { forwarder, forwardTo, config, whaleToken } = await loadFixture(deployFixture);
 
       const ethBalanceBefore = await hre.ethers.provider.getBalance(forwardTo.address);
       const tokenBalanceBefore = await whaleToken.balanceOf(forwardTo.address);
 
-      // assemble params
-      const token = await whaleToken.getAddress();
-      const amount = 10000000n;
-      const amountOutMinimum = 1000000n / 97n * 100n;
-      const swapFee = 3000n; // 3000 bps = 0.3%
+      const flushParams = {
+        token: await whaleToken.getAddress(),
+        amount: 10000000n,
+        amountOutMinimum: 1000000n / 97n * 100n,
+        swapFee: 3000n, // 3000 bps = 0.3%
+        swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24),
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      const flushAuth = await authorizeFlush(
+        forwardTo,
+        await forwarder.getAddress(),
+        flushParams
+      )
 
       await expect(
         forwarder.flushTokenWithNative(
-          token,
-          amount,
-          amountOutMinimum,
-          swapFee,
-          Date.now() + 1000 * 60 * 60 * 24,
-          0,
-          config.RElAYER_FEE
+          flushParams,
+          flushAuth
         )
       ).not.to.be.reverted;
 
@@ -82,23 +87,151 @@ describe('Forwarder', function () {
       expect(ethBalanceAfter).to.be.greaterThan(ethBalanceBefore);
       expect(tokenBalanceAfter).to.be.equal(tokenBalanceBefore + BigInt("10000000"));
     })
+
+    it("Should flush with native when called by forwardTo without auth signature", async function () {
+      const { forwarder, forwardTo, config, whaleToken } = await loadFixture(deployFixture);
+
+      const ethBalanceBefore = await hre.ethers.provider.getBalance(forwardTo.address);
+      const tokenBalanceBefore = await whaleToken.balanceOf(forwardTo.address);
+
+      const flushParams = {
+        token: await whaleToken.getAddress(),
+        amount: 10000000n,
+        amountOutMinimum: 1000000n / 97n * 100n,
+        swapFee: 3000n, // 3000 bps = 0.3%
+        swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24),
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+
+      await expect(
+        forwarder.connect(forwardTo).flushTokenWithNative(
+          flushParams,
+          "0x"
+        )
+      ).not.to.be.reverted;
+
+      const ethBalanceAfter = await hre.ethers.provider.getBalance(forwardTo.address);
+      const tokenBalanceAfter = await whaleToken.balanceOf(forwardTo.address);
+
+      expect(ethBalanceAfter).to.be.greaterThan(ethBalanceBefore);
+      expect(tokenBalanceAfter).to.be.equal(tokenBalanceBefore + BigInt("10000000"));
+    })
+
+    it("Should not flush with native when called by other without auth signature", async function () {
+      const { forwarder, config, whaleToken, owner } = await loadFixture(deployFixture);
+
+      const flushParams = {
+        token: await whaleToken.getAddress(),
+        amount: 10000000n,
+        amountOutMinimum: 1000000n / 97n * 100n,
+        swapFee: 3000n, // 3000 bps = 0.3%
+        swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24),
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+
+      expect(owner.address).not.to.equal(await forwarder.getForwardTo());
+      await expect(
+        forwarder.connect(owner).flushTokenWithNative(
+          flushParams,
+          "0x"
+        )
+      ).to.be.reverted;
+    })
   })
 
   describe("Native flush", function () {
-    it("Should flush native to forwardTo", async function () {
-      const { forwarder, forwarderAddress, owner, forwardTo } = await loadFixture(deployFixture);
+    it("Should flush native to forwardTo when called by forwarder with auth signature", async function () {
+      const { forwarder, forwarderAddress, owner, forwardTo, config } = await loadFixture(deployFixture);
       const balanceBefore = await hre.ethers.provider.getBalance(forwardTo);
 
       await owner.sendTransaction({
         to: forwarderAddress,
-        value: hre.ethers.parseEther('1.0'),
+        value: hre.ethers.parseEther('2.0'),
       });
 
-      await forwarder.flushNative(hre.ethers.parseEther('1.0'));
+      const flushParams = {
+        token: ethers.ZeroAddress,
+        amount: 10000000n,
+        amountOutMinimum: 10000000n,
+        swapFee: 0n, 
+        swapDeadline: 0n,
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      const flushAuth = await authorizeFlush(
+        forwardTo,
+        await forwarder.getAddress(),
+        flushParams
+      )
+
+      await expect(
+        forwarder.flushNative(
+          flushParams,
+          flushAuth
+        )
+      ).not.to.be.reverted;
 
       const balanceAfter = await hre.ethers.provider.getBalance(forwardTo);
       expect(balanceAfter).to.be.greaterThan(balanceBefore);
     })
-  })
 
+    it("Should flush native to forwardTo when called by forwardTo without auth signature", async function () {
+      const { forwarder, forwarderAddress, owner, forwardTo, config } = await loadFixture(deployFixture);
+      const balanceBefore = await hre.ethers.provider.getBalance(forwardTo);
+
+      await owner.sendTransaction({
+        to: forwarderAddress,
+        value: hre.ethers.parseEther('2.0'),
+      });
+
+      const flushParams = {
+        token: ethers.ZeroAddress,
+        amount: 10000000n,
+        amountOutMinimum: 10000000n,
+        swapFee: 0n, 
+        swapDeadline: 0n,
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      
+      await expect(
+        forwarder.connect(forwardTo).flushNative(
+          flushParams,
+          "0x"
+        )
+      ).not.to.be.reverted;
+
+      const balanceAfter = await hre.ethers.provider.getBalance(forwardTo);
+      expect(balanceAfter).to.be.greaterThan(balanceBefore);
+    })
+
+    it("Should not flush native to forwardTo when called by other without auth signature", async function () {
+      const { forwarder, forwarderAddress, owner, config } = await loadFixture(deployFixture);
+
+      await owner.sendTransaction({
+        to: forwarderAddress,
+        value: hre.ethers.parseEther('2.0'),
+      });
+
+      const flushParams = {
+        token: ethers.ZeroAddress,
+        amount: 10000000n,
+        amountOutMinimum: 10000000n,
+        swapFee: 0n, 
+        swapDeadline: 0n,
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      
+      expect(owner.address).not.to.equal(await forwarder.getForwardTo());
+      await expect(
+        forwarder.connect(owner).flushNative(
+          flushParams,
+          "0x"
+        )
+      ).to.be.reverted;
+    })
+  })
 });
