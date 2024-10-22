@@ -48,7 +48,7 @@ export default function ConnectButton() {
                 <button
                   onClick={openAccountModal}
                   type="button"
-                  className="bg-muted px-4 py-3 rounded-xl w-full text-left"
+                  className="bg-muted px-4 py-3 rounded-xl w-full text-left overflow-x-scroll"
                 >
                   <span className="text-sm text-muted-foreground block">Forward tokens to:</span>
                   <span>{account.address}</span>

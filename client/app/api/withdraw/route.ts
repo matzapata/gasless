@@ -1,29 +1,28 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { deployForwarder, quoteFlushTokenWithNative, flushTokenWithNative } from "@/lib/forwarder";
+import { NextRequest } from "next/server";
 
-type Data = {
-  deployTx?: string;
-  withdrawTx?: string;
-  error?: string;
-};
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>,
-) {
-  const { forwarderAddress, userAddress, tokenAddress, amountDecimal, chainId } = req.body;
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { userAddress, chainId, tokenAddress, amountDecimal } = body;
 
   // validations
-  if (!forwarderAddress || typeof forwarderAddress !== "string" || !forwarderAddress.startsWith("0x")) {
-    return res.status(400).json({ error: "Invalid request" });
+  if (!userAddress || typeof userAddress !== "string" || !userAddress.startsWith("0x")) {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  } else if (!chainId || typeof chainId !== "number") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  } else if (!tokenAddress || typeof tokenAddress !== "string" || !tokenAddress.startsWith("0x")) {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  } else if (!amountDecimal || typeof amountDecimal !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-// TODO: check if token is native or not
+
+  // TODO: check if token is native or not
 
   const estimate = await quoteFlushTokenWithNative({
     chainId,
     tokenAddress: tokenAddress as `0x${string}`,
-    forwarderAddress: forwarderAddress as `0x${string}`,
     userAddress: userAddress as `0x${string}`,
     amountDecimal: amountDecimal.toString(),
   });
@@ -38,8 +37,8 @@ export default async function handler(
     chainId,
     token: tokenAddress as `0x${string}`,
     amount: estimate.tokenIn,
-    forwarderAddress: forwarderAddress as `0x${string}`,
+    forwarderAddress: estimate.userForwarder,
   });
 
-  res.status(200).json({ deployTx, withdrawTx });
+  return Response.json({ deployTx, withdrawTx });
 }

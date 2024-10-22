@@ -38,17 +38,10 @@ export default function RootLayout({
             <p>
               Built by{" "}
               <Link
-                href="https://twitter.com/chronark_"
+                href="https://twitter.com/matzapataa"
                 className="font-semibold duration-150 hover:text-zinc-200"
               >
-                @chronark_
-              </Link>
-              and{" "}
-              <Link
-                href="https://github.com/chronark/envshare/graphs/contributors"
-                className="underline duration-150 hover:text-zinc-200"
-              >
-                many others{" "}
+                @matzapataa
               </Link>
             </p>
           </div>

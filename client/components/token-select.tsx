@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -6,10 +11,12 @@ import { Coins, SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { shortenAddress } from "@/lib/strings";
 
 export const TokenSelect: React.FC<{
   value: Token;
-  balance?: bigint;
+  balance?: number;
   loading?: boolean;
   options: Token[];
   onSelect: (token: Token) => void;
@@ -20,14 +27,6 @@ export const TokenSelect: React.FC<{
   const filteredOptions = props.options.filter((option) =>
     option.symbol.toLowerCase().startsWith(search.toLowerCase())
   );
-
-  const decimalBalance = useMemo(() => {
-    if (props.balance) {
-      return Number(props.balance.toString()) / 10 ** props.value.decimals;
-    } else {
-      return 0;
-    }
-  }, [props.balance, props.value]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -53,7 +52,7 @@ export const TokenSelect: React.FC<{
                   "animate-pulse": props.loading,
                 })}
               >
-                Balance: {props.loading ? "..." : decimalBalance}
+                Balance: {props.loading ? "..." : props.balance}
               </span>
             </div>
           </div>
@@ -61,6 +60,8 @@ export const TokenSelect: React.FC<{
         </button>
       </DialogTrigger>
       <DialogContent className="w-[400px] space-y-0 gap-0">
+        <DialogTitle className="hidden">Select token</DialogTitle>
+
         <div className="flex space-y-0 flex-row justify-between items-center px-4 py-4">
           <h1 className="text-lg font-medium leading-none tracking-tight">
             Select token
@@ -115,7 +116,7 @@ function TokenButton(props: {
     <button
       onClick={() => props.onClick()}
       className={cn(
-        "flex space-x-4 px-4 py-3 items-center hover:opacity-80",
+        "flex space-x-4 px-4 py-3 items-center hover:opacity-80 group",
         props.className
       )}
     >
@@ -131,8 +132,11 @@ function TokenButton(props: {
       </div>
       <div className="text-left">
         <span className="block text-base font-medium">{props.token.name}</span>
-        <span className="block text-sm text-muted-foreground">
+        <span className="block text-sm text-muted-foreground group-hover:hidden">
           {props.token.symbol}
+        </span>
+        <span className="group-hover:block hidden text-sm text-muted-foreground">
+          {shortenAddress(props.token.address)}
         </span>
       </div>
     </button>

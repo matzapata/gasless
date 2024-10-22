@@ -1,5 +1,5 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
-import { erc20Abi, getContract } from "viem";
+import { erc20Abi, formatEther, getContract, parseUnits } from "viem";
 import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
@@ -8,24 +8,28 @@ export const quoteFlushTokenWithNative = async ({
     chainId,
     tokenAddress,
     userAddress,
-    forwarderAddress,
     amountDecimal,
 }: {
     chainId: number;
     tokenAddress: `0x${string}`;
     userAddress: `0x${string}`;
-    forwarderAddress: `0x${string}`;
     amountDecimal: string;
 }) => {
     const provider = providers[chainId as number];
     const gasPrice = await provider.getGasPrice()
     const token = await getContract({ abi: erc20Abi, address: tokenAddress, client: provider })
-    const forwarderImplementation = await getContract({ abi: ForwarderABI, address: forwarderImplementations[chainId], client: provider })
+
+    const userForwarder = await provider.readContract({
+        address: forwarderFactories[chainId],
+        abi: ForwarderFactoryABI,
+        functionName: 'getForwarder',
+        args: [userAddress],
+    }) as `0x${string}`;
 
     // ensure enough balance for withdrawal
     const tokenDecimals = await token.read.decimals();
-    const amount = BigInt(amountDecimal) * 10n ** BigInt(tokenDecimals);
-    const balance = await token.read.balanceOf([forwarderAddress as `0x${string}`]);
+    const amount = parseUnits(amountDecimal, tokenDecimals);
+    const balance = await token.read.balanceOf([userForwarder]);
 
     if (balance < amount) {
         throw new Error("Insufficient balance");
@@ -33,7 +37,7 @@ export const quoteFlushTokenWithNative = async ({
 
     // calculate deployment cost
     const isDeployed = await provider.getCode({
-        address: forwarderAddress as `0x${string}`,
+        address: userForwarder,
     }).then((code) => code !== "0x");
 
     // make estmations
@@ -44,11 +48,15 @@ export const quoteFlushTokenWithNative = async ({
             address: forwarderFactories[chainId],
             functionName: 'createForwarder',
             args: [userAddress],
+            account: relayerAccounts[chainId].account,
         }) * gasPrice);
     }
-    const eth = await forwarderImplementation.read.quoteSwapForNative(
-        [tokenAddress, amount, 3000n, 0],
-    ) as bigint;
+    const eth = await provider.readContract({
+        address: forwarderImplementations[chainId],
+        abi: ForwarderABI,
+        functionName: "quoteSwapForNative",
+        args: [tokenAddress, amount, 3000n, 0]
+    }) as bigint;
 
     const withdrawalFee = gasPerWithdrawal[chainId as number] * gasPrice;
     const relayerFee = deploymentCost + withdrawalFee + profitPerTxInEth[chainId as number];
@@ -62,6 +70,7 @@ export const quoteFlushTokenWithNative = async ({
         tokenDecimals,
         relayerFee,
         deploymentCost,
+        userForwarder,
     }
 }
 

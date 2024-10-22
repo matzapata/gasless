@@ -20,7 +20,6 @@ export default function Withdraw() {
 
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [estimation] = useState();
   const [token, setToken] = useState<Token>(tokens[chainId][0] as Token);
 
   const { data: forwarderAddress } = useQuery({
@@ -33,15 +32,24 @@ export default function Withdraw() {
         .then((res) => res.forwarder),
     enabled: !!account.address && !!account.chainId,
   });
-  const balance = useReadContract({
+  
+  const {data: balanceBn} = useReadContract({
     address: token.address,
     abi: ERC20_ABI,
     functionName: "balanceOf",
-    args: [forwarderAddress?.data as string],
+    args: [forwarderAddress as string],
   });
 
+  const balance = useMemo(() => {
+    if (balanceBn) {
+      return Number(balanceBn.toString()) / 10 ** token.decimals;
+    } else {
+      return 0;
+    }
+  }, [balanceBn, token]);
+
   const isWithdrawDisabled = useMemo(
-    () => amount === "" || Number(amount) <= 0 || !account.address,
+    () => amount === "" || Number(amount) <= 0 || !account.address || Number(amount) > balance,
     [amount, account.address]
   );
 
@@ -50,18 +58,32 @@ export default function Withdraw() {
     [account.chain]
   );
 
+  const estimate = useQuery({
+    queryKey: [(account.address ?? "-"), token.address, amount],
+    queryFn: () =>
+      fetch(
+        `/api/estimate?user=${account.address}&token=${token.address}&amount=${amount}&chain=${account.chainId}`
+      )
+        .then((res) => res.json()),
+    enabled: !isWithdrawDisabled,
+  });
+
+  const nativeCurrency = useMemo(() => {
+    return account.chain?.nativeCurrency.symbol ?? "ETH";
+  }, [chainId]);
+
   return (
-    <div className="min-h-screen flex flex-col items-center pt-32">
-      <div className="space-y-2 max-w-[450px]">
+    <div className="min-h-screen flex flex-col items-center md:pt-32 pt-10 ">
+      <div className="space-y-2 w-screen md:max-w-[450px] px-4">
         <div className="space-y-1">
           <TokenSelect
             value={token}
-            balance={BigInt((balance.data as string) ?? 0)}
+            balance={balance}
             onSelect={setToken}
             options={tokens[chainId]}
           />
           <div className="bg-muted px-4 py-3 rounded-b-xl">
-            <span className="text-sm text-muted-foreground">Sell for ETH</span>
+            <span className="text-sm text-muted-foreground">Sell for {nativeCurrency}</span>
             <input
               type="number"
               min={0}
@@ -77,19 +99,19 @@ export default function Withdraw() {
 
         {account.isConnected && isChainSupported && (
           <Button
-            disabled={isWithdrawDisabled}
+            disabled={isWithdrawDisabled || estimate.isLoading}
             className="w-full  font-medium"
             size={"lg"}
           >
-            {isWithdrawDisabled ? "Enter amount" : "Withdraw"}
+            {isWithdrawDisabled ? "Enter amount" : estimate.isPending ? "Loading..." : "Withdraw"}
           </Button>
         )}
 
-        {estimation && (
+        {estimate.isPending === false && (
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <CollapsibleTrigger asChild>
               <div className="flex justify-between items-center cursor-pointer py-2">
-                <span className="text-sm">Receive 0.1 ETH and 100 USDC</span>
+                <span className="text-sm">Receive ~{estimate.data.ethOut.slice(0, 6)} {nativeCurrency} and {estimate.data.tokenOut.slice(0, 6)} {token.symbol}</span>
                 <ChevronDownIcon className="h-4 w-4" />
               </div>
             </CollapsibleTrigger>
@@ -100,34 +122,16 @@ export default function Withdraw() {
                   Receive at least
                 </span>
                 <div className="text-right">
-                  <span className="text-sm block">0.1 ETH</span>
-                  <span className="text-sm block">100 USDC</span>
+                  <span className="text-sm block">{estimate.data.ethOutMin.slice(0, 6)} {nativeCurrency}</span>
+                  <span className="text-sm block">{estimate.data.tokenOut.slice(0, 6)} {token.symbol}</span>
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-sm">Swap fee</span>
-                <span className="text-sm">0.01%</span>
-              </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground text-sm">
-                  Swap fee (0.25%)
+                  Relayer fee
                 </span>
-                <span className="text-sm">$0.01</span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-sm">
-                  Relayer fee (0.1 ETH)
-                </span>
-                <span className="text-sm">$0.01</span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-sm">
-                  Network cost
-                </span>
-                <span className="text-sm">$0.01</span>
+                <span className="text-sm">{estimate.data.relayerFee.slice(0, 6)} {nativeCurrency}</span>
               </div>
             </CollapsibleContent>
           </Collapsible>
