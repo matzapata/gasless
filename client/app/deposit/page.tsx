@@ -1,11 +1,11 @@
 "use client";
 import { shortenAddress } from "@/lib/strings";
-import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { QRCode } from "react-qrcode-logo";
 import { useAccount } from "wagmi";
 import ConnectButton from "@/components/connect-button";
 import { useCopyToClipboard } from "@/hooks/use-copy";
 import { useQuery } from "@tanstack/react-query";
+import { ClipboardCopy } from "lucide-react";
 
 export default function DepositCard() {
   const account = useAccount();
@@ -41,7 +41,7 @@ export default function DepositCard() {
                   ? "Copied!"
                   : shortenAddress(forwarderAddress as string)}
               </span>
-              <ClipboardDocumentIcon className="h-4 w-4" />
+              <ClipboardCopy className="h-4 w-4" />
             </button>
 
             <div className="flex justify-center">

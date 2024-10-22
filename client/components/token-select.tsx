@@ -5,9 +5,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { Coins, SearchIcon, X } from "lucide-react";
+import { ChevronDown, Coins, SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
 import { useMemo, useState } from "react";
@@ -56,7 +55,7 @@ export const TokenSelect: React.FC<{
               </span>
             </div>
           </div>
-          <ChevronDownIcon className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </button>
       </DialogTrigger>
       <DialogContent className="w-[400px] space-y-0 gap-0">

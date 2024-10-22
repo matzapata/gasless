@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,6 +12,7 @@ import { Token, tokens } from "@/config/tokens";
 import ConnectButton from "@/components/connect-button";
 import { ERC20_ABI } from "@/config/abis/ERC20";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 
 export default function Withdraw() {
   const account = useAccount();
@@ -112,7 +112,7 @@ export default function Withdraw() {
             <CollapsibleTrigger asChild>
               <div className="flex justify-between items-center cursor-pointer py-2">
                 <span className="text-sm">Receive ~{estimate.data.ethOut.slice(0, 6)} {nativeCurrency} and {estimate.data.tokenOut.slice(0, 6)} {token.symbol}</span>
-                <ChevronDownIcon className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </div>
             </CollapsibleTrigger>
 
