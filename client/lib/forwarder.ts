@@ -1,6 +1,6 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
 import { erc20Abi, formatEther, getContract, parseUnits } from "viem";
-import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts } from "@/config";
+import { forwarderFactories, gasPerWithdrawal, profitPerTxInEth, providers, relayerAccounts, slippage, swapFee } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
 
@@ -55,7 +55,7 @@ export const quoteFlushTokenWithNative = async ({
         address: forwarderImplementations[chainId],
         abi: ForwarderABI,
         functionName: "quoteSwapForNative",
-        args: [tokenAddress, amount, 3000n, 0]
+        args: [tokenAddress, amount, swapFee, 0]
     }) as bigint;
 
     const withdrawalFee = gasPerWithdrawal[chainId as number] * gasPrice;
@@ -114,7 +114,7 @@ export const flushTokenWithNative = async ({
         address: forwarderAddress,
         abi: ForwarderABI,
         functionName: 'flushTokenWithNative',
-        args: [token, amount, 3000n, 0],
+        args: [token, amount, amount * slippage, swapFee, 0],
     }).then(({ request }) => relayer.writeContract(request))
 }
 
@@ -132,5 +132,5 @@ export const getUserForwarder = async ({
         abi: ForwarderFactoryABI,
         functionName: 'getForwarder',
         args: [userAddress],
-    }) as Promise<string>; // TODO:
+    }) as Promise<string>; 
 }

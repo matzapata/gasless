@@ -1,6 +1,7 @@
 import { quoteFlushTokenWithNative } from "@/lib/forwarder";
 import { formatEther, formatUnits } from "viem";
 import { NextRequest } from "next/server";
+import { slippage } from "@/config";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return Response.json({
       ethOut: formatEther(estimate.ethOut),
-      ethOutMin: formatEther(estimate.ethOut * 97n / 100n),
+      ethOutMin: formatEther(estimate.ethOut * slippage),
       tokenOut: formatUnits(estimate.tokenOut, estimate.tokenDecimals),
       relayerFee: formatEther(estimate.relayerFee),
     }, { status: 200 });

@@ -1,6 +1,10 @@
 import { createPublicClient, createWalletClient, http, PublicClient, WalletClient } from "viem"
 import { polygon } from "viem/chains";
 
+export const slippage = 97n / 100n;
+
+export const swapFee = 3000n;
+
 // public connections
 export const providers: {
     [chainId: number]: PublicClient;
