@@ -140,3 +140,36 @@ export const ForwarderFactoryABI = [
         "type": "function"
     }
 ]
+
+export const FlushType = [{
+    name: "token",
+    type: "address"
+},
+{
+    name: "amount",
+    type: "uint256"
+},
+{
+    name: "amountOutMinimum",
+    type: "uint256"
+},
+{
+    name: "swapFee",
+    type: "uint24"
+},
+{
+    name: "swapDeadline",
+    type: "uint256"
+},
+{
+    name: "sqrtPriceLimitX96",
+    type: "uint104"
+},
+{
+    name: "relayerFee",
+    type: "uint256"
+},
+{
+    name: "nonce",
+    type: "uint256"
+}]

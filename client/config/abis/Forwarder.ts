@@ -1,6 +1,33 @@
 export const ForwarderABI = [
     {
         "inputs": [],
+        "name": "ECDSAInvalidSignature",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "length",
+                "type": "uint256"
+            }
+        ],
+        "name": "ECDSAInvalidSignatureLength",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "s",
+                "type": "bytes32"
+            }
+        ],
+        "name": "ECDSAInvalidSignatureS",
+        "type": "error"
+    },
+    {
+        "inputs": [],
         "name": "EmptyBalance",
         "type": "error"
     },
@@ -68,6 +95,11 @@ export const ForwarderABI = [
         "type": "error"
     },
     {
+        "inputs": [],
+        "name": "UnauthorizedFlush",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -102,9 +134,51 @@ export const ForwarderABI = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOutMinimum",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint24",
+                        "name": "swapFee",
+                        "type": "uint24"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "swapDeadline",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint104",
+                        "name": "sqrtPriceLimitX96",
+                        "type": "uint104"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "relayerFee",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct IForwarder.FlushParams",
+                "name": "params",
+                "type": "tuple"
+            },
+            {
+                "internalType": "bytes",
+                "name": "signature",
+                "type": "bytes"
             }
         ],
         "name": "flushNative",
@@ -133,39 +207,51 @@ export const ForwarderABI = [
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOutMinimum",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint24",
+                        "name": "swapFee",
+                        "type": "uint24"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "swapDeadline",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint104",
+                        "name": "sqrtPriceLimitX96",
+                        "type": "uint104"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "relayerFee",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct IForwarder.FlushParams",
+                "name": "params",
+                "type": "tuple"
             },
             {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amountOutMinimum",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint24",
-                "name": "swapFee",
-                "type": "uint24"
-            },
-            {
-                "internalType": "uint256",
-                "name": "deadline",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint104",
-                "name": "sqrtPriceLimitX96",
-                "type": "uint104"
-            },
-            {
-                "internalType": "uint256",
-                "name": "relayerFee",
-                "type": "uint256"
+                "internalType": "bytes",
+                "name": "signature",
+                "type": "bytes"
             }
         ],
         "name": "flushTokenWithNative",
@@ -181,6 +267,19 @@ export const ForwarderABI = [
                 "internalType": "address",
                 "name": "",
                 "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getNonce",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",

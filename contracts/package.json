@@ -3,7 +3,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "lint": "solhint 'contracts/**/*.sol'",
-    "deploy:forwarder": "npx hardhat run ./scripts/forwarder/deploy.ts"
+    "deploy:polygon": "npx hardhat run ./scripts/forwarder/deploy.ts --network polygon"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "5.0.0",

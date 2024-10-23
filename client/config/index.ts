@@ -1,7 +1,7 @@
-import { createPublicClient, createWalletClient, http, PublicClient, WalletClient } from "viem"
+import { Address, createPublicClient, createWalletClient, http, PublicClient, WalletClient } from "viem"
 import { polygon } from "viem/chains";
 
-export const slippage = 97n / 100n;
+export const slippage = 97n;
 
 export const swapFee = 3000n;
 
@@ -22,8 +22,8 @@ export const relayerAccounts: {
     [137]: createWalletClient({
         chain: polygon,
         transport: http(),
-        account: "0xF754D0f4de0e815b391D997Eeec5cD07E59858F0",
-        key: "TODO:"
+        account: process.env.RELAYER_ACCOUNT! as Address,
+        key: process.env.RELAYER_KEY!,
     })
 }
 
@@ -32,27 +32,32 @@ export const relayerAccounts: {
 export const profitPerTxInEth: {
     [chainId: number]: bigint
 } = {
-    [137]: 100n
+    [137]: 100000n // TODO:
 }
 
-// cost of executing a withdrawal with swap for eth in units of gas
-export const gasPerWithdrawal: {
+// cost of executing a flush with swap for eth in units of gas
+export const gasPerTokenFlush: {
     [chainId: number]: bigint
 } = {
-    [137]: 100n
+    [137]: 100000n // TODO:
 }
 
+export const gasPerNativeFlush: {
+    [chainId: number]: bigint
+} = {
+    [137]: 100n // TODO:
+}
 
 // forwarder factories
 export const forwarderFactories: {
     [chainId: number]: `0x${string}`
 } = {
-    137: "0xDaA6099A78865e5d2fFBa7ffb996825cCEB362F9"
+    137: "0x22498dc72F94D40624854bAeB798EDeA4d17f77d"
 };
 
 // forwarder implementations
 export const forwarderImplementations: {
     [chainId: number]: `0x${string}`
 } = {
-    137: "0x7651D2Cf81E2E83C61125aad34871FA32c16D1c3"
+    137: "0xc813C6A971e99f6582099Cfc72F21A2FA1499E69"
 };

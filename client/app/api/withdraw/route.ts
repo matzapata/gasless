@@ -1,10 +1,15 @@
-import { deployForwarder, quoteFlushTokenWithNative, flushTokenWithNative } from "@/lib/forwarder";
+import { deployForwarder, quoteFlushTokenWithNative, flushTokenWithNative, quoteFlush, flushNative } from "@/lib/forwarder";
 import { NextRequest } from "next/server";
+import { Address, zeroAddress } from "viem";
 
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { userAddress, chainId, tokenAddress, amountDecimal } = body;
+  const chainId = Number(body.chainId);
+  const amountDecimal = body.amountDecimal;
+  const userAddress = body.userAddress as Address;
+  const tokenAddress = body.tokenAddress as Address;
+  const signature = body.signature;
 
   // validations
   if (!userAddress || typeof userAddress !== "string" || !userAddress.startsWith("0x")) {
@@ -17,28 +22,32 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-
-  // TODO: check if token is native or not
-
-  const estimate = await quoteFlushTokenWithNative({
+  const { estimate, params } = await quoteFlush({
     chainId,
-    tokenAddress: tokenAddress as `0x${string}`,
-    userAddress: userAddress as `0x${string}`,
-    amountDecimal: amountDecimal.toString(),
+    tokenAddress,
+    userAddress,
+    amountDecimal,
   });
 
-  let deployTx: string | undefined;
-  if (estimate.deploymentCost > 0) {
-    deployTx = await deployForwarder({ chainId, userAddress: userAddress as `0x${string}` });
+  if (estimate.enoughForFees === false) {
+    return Response.json({ error: "Not enough funds" }, { status: 400 });
   }
 
-  // withdraw with native
-  const withdrawTx = await flushTokenWithNative({
-    chainId,
-    token: tokenAddress as `0x${string}`,
-    amount: estimate.tokenIn,
-    forwarderAddress: estimate.userForwarder,
-  });
+  let deployTx: string | undefined;
+  let withdrawTx: string | undefined;
 
-  return Response.json({ deployTx, withdrawTx });
+  try {
+    if (estimate.deployed === false) {
+      deployTx = await deployForwarder({ chainId, userAddress });
+    }
+
+    withdrawTx = tokenAddress === zeroAddress ?
+      await flushNative(chainId, userAddress, params, signature)
+      : await flushTokenWithNative(chainId, userAddress, params, signature);
+
+    return Response.json({ deployTx, withdrawTx });
+  } catch (e) {
+    return Response.json({ deployTx, withdrawTx, error: e instanceof Error ? e.message : "Unknown error" }, { status: 400 });
+  }
+
 }

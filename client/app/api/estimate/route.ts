@@ -1,12 +1,11 @@
-import { quoteFlushTokenWithNative } from "@/lib/forwarder";
-import { formatEther, formatUnits } from "viem";
+import { quoteFlush } from "@/lib/forwarder";
+import { Address } from "viem";
 import { NextRequest } from "next/server";
-import { slippage } from "@/config";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
-  const userAddress = searchParams.get("user")
-  const tokenAddress = searchParams.get("token")
+  const userAddress = searchParams.get("user") as Address
+  const tokenAddress = searchParams.get("token") as Address
   const amountDecimal = searchParams.get("amount")
   const chainId = Number(searchParams.get("chain"))
 
@@ -21,22 +20,13 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  // TODO: check if token is native or not
-
   try {
-    const estimate = await quoteFlushTokenWithNative({
-      chainId: Number(chainId),
-      tokenAddress: tokenAddress as `0x${string}`,
-      userAddress: userAddress as `0x${string}`,
+    return Response.json(await quoteFlush({
+      chainId: chainId,
+      tokenAddress: tokenAddress,
+      userAddress: userAddress,
       amountDecimal: amountDecimal,
-    });
-
-    return Response.json({
-      ethOut: formatEther(estimate.ethOut),
-      ethOutMin: formatEther(estimate.ethOut * slippage),
-      tokenOut: formatUnits(estimate.tokenOut, estimate.tokenDecimals),
-      relayerFee: formatEther(estimate.relayerFee),
-    }, { status: 200 });
+    }), { status: 200 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 400 });
   }

@@ -9,8 +9,7 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { ChevronDown, Coins, SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { shortenAddress } from "@/lib/strings";
 
 export const TokenSelect: React.FC<{
