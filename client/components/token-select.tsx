@@ -9,7 +9,7 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { ChevronDown, Coins, SearchIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { shortenAddress } from "@/lib/strings";
 
 export const TokenSelect: React.FC<{
@@ -21,6 +21,13 @@ export const TokenSelect: React.FC<{
 }> = (props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() =>  setMounted(true), []);
+  if (!mounted) {
+    // Return null during server-side rendering
+    return null; 
+  }
 
   const filteredOptions = props.options.filter((option) =>
     option.symbol.toLowerCase().startsWith(search.toLowerCase())

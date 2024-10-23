@@ -26,7 +26,7 @@ export default function Withdraw() {
 
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [token, setToken] = useState<Token>(tokens[chainId][0] as Token);
+  const [token, setToken] = useState<Token>(tokens[chainId][0]);
 
   const { data: forwarderAddress } = useQuery({
     queryKey: ["forwarder", account.address],
@@ -116,9 +116,9 @@ export default function Withdraw() {
         <div className="space-y-1">
           <TokenSelect
             value={token}
-            balance={balance}
+            balance={balance ?? 0}
             onSelect={setToken}
-            options={tokens[chainId]}
+            options={tokens[chainId] || []}
           />
           <div className="bg-muted px-4 py-3 rounded-b-xl">
             <span className="text-sm text-muted-foreground">
