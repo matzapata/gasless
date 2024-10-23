@@ -140,11 +140,10 @@ export default function Withdraw() {
       });
 
       setAmount("");
-    } catch (e: any) {
+    } catch {
       toast({
         variant: "destructive",
-        title: "Withdraw Failed",
-        description: e?.message,
+        title: "Something went wrong",
       });
     } finally {
       setWithdrawLoading(false);

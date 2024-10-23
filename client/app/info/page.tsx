@@ -21,13 +21,13 @@ export default function Info() {
             <AccordionItem value="item-2">
               <AccordionTrigger>Why do I need it?</AccordionTrigger>
               <AccordionContent>
-                You're trying to fund a new wallet, someone wants to send you funds in a chain you don't use yet. In summary you'll receive tokens and no gas.
+                You&apos;re trying to fund a new wallet, someone wants to send you funds in a chain you don&apos;t use yet. In summary you&apos;ll receive tokens and no gas.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
               <AccordionTrigger>Can I avoid the relayer?</AccordionTrigger>
               <AccordionContent>
-                Yes. You're totally free to interact with the forwarder without our relayer, it's just simpler with it. Just take your forwarder address and find the contract in etherscan. Use the receiver account to call the forwarder without a signature, or assemble the signature to use your own relayer. Only catch is you'll need native.
+                Yes. You&apos;re totally free to interact with the forwarder without our relayer, it&apos;s just simpler with it. Just take your forwarder address and find the contract in etherscan. Use the receiver account to call the forwarder without a signature, or assemble the signature to use your own relayer. Only catch is you&apos;ll need native.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

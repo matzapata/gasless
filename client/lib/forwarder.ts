@@ -1,5 +1,5 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
-import { Address, erc20Abi, formatEther, formatUnits, getContract, parseUnits, zeroAddress } from "viem";
+import { Address, erc20Abi, formatUnits, getContract, parseUnits, zeroAddress } from "viem";
 import { forwarderFactories, gasPerNativeFlush, gasPerTokenFlush, profitPerTxInEth, providers, walletClients, slippage, swapFee, relayerAccounts } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
@@ -225,15 +225,6 @@ export const deployForwarder = ({
     const provider = providers[chainId];
     const client = walletClients[chainId];
     const relayer = relayerAccounts[chainId];
-
-    console.log("writeContract", {
-        account: relayer,
-        privateKey: process.env.RELAYER_KEY!,
-        address: forwarderFactories[chainId],
-        abi: ForwarderFactoryABI.find((abi) => abi.name === "getForwarder") as any,
-        functionName: 'createForwarder',
-        args: [userAddress],
-    })
 
     // create forwarder for user
     return provider.simulateContract({
