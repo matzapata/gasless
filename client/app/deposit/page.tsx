@@ -24,7 +24,7 @@ export default function DepositCard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center md:pt-32 pt-10 ">
-      <div className="space-y-2 w-screen md:max-w-[450px] px-4">
+      <div className="space-y-1 w-screen md:max-w-[450px] px-4">
         {account.isConnected && isLoading ? (
           <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
             <p className="text-center text-sm">Loading...</p>

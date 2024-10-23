@@ -112,7 +112,7 @@ export default function Withdraw() {
 
   return (
     <div className="min-h-screen flex flex-col items-center md:pt-32 pt-10 ">
-      <div className="space-y-2 w-screen md:max-w-[450px] px-4">
+      <div className="space-y-1 w-screen md:max-w-[450px] px-4">
         <div className="space-y-1">
           <TokenSelect
             value={token}
@@ -136,7 +136,9 @@ export default function Withdraw() {
         </div>
 
         <ConnectButton />
+      </div>
 
+      <div className="space-y-1 w-screen md:max-w-[450px] px-4 mt-2">
         {account.isConnected && isChainSupported && (
           <Button
             disabled={isWithdrawDisabled || quotePending}

@@ -1,5 +1,5 @@
 
 
-export function shortenAddress(address: string): string {
-    return `${address.slice(0, 6)}...${address.slice(-6)}`
+export function shortenAddress(address: string, size = 10): string {
+    return `${address.slice(0, size)}...${address.slice(-size)}`
 }

@@ -21,12 +21,25 @@ export const TokenSelect: React.FC<{
 }> = (props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  
   const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  useEffect(() =>  setMounted(true), []);
   if (!mounted) {
     // Return null during server-side rendering
-    return null; 
+    return (
+      <div className="bg-muted rounded-t-lg flex justify-between items-center w-full px-4 py-3">
+        <div className="flex items-center space-x-3">
+          <div className="h-9 w-9 rounded-full bg-muted-foreground/30 flex justify-center items-center">
+            <Coins className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <div className="animate-pulse bg-muted-foreground/30 rounded-md w-[200px] h-[14px]" />
+            <div className="animate-pulse bg-muted-foreground/30 rounded-md w-[150px] h-[12px]" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const filteredOptions = props.options.filter((option) =>
@@ -38,11 +51,11 @@ export const TokenSelect: React.FC<{
       <DialogTrigger className="w-full">
         <button className="bg-muted rounded-t-lg flex justify-between items-center w-full px-4 py-3">
           <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 rounded-full bg-muted flex justify-center items-center">
+            <div className="h-9 w-9 rounded-full bg-muted-foreground/30 flex justify-center items-center">
               {props.value.image ? (
                 <img
                   src={props.value.image}
-                  className="h-9 w-9 rounded-full bg-gray-100"
+                  className="h-9 w-9 rounded-full bg-muted-foreground/30"
                 />
               ) : (
                 <Coins className="h-4 w-4 text-muted-foreground" />
