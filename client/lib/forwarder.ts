@@ -1,6 +1,6 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
 import { Address, erc20Abi, formatEther, formatUnits, getContract, parseUnits, zeroAddress } from "viem";
-import { forwarderFactories, gasPerNativeFlush, gasPerTokenFlush, profitPerTxInEth, providers, relayerAccounts, slippage, swapFee } from "@/config";
+import { forwarderFactories, gasPerNativeFlush, gasPerTokenFlush, profitPerTxInEth, providers, walletClients, slippage, swapFee, relayerAccounts } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
 
@@ -93,7 +93,7 @@ export const quoteFlushTokenWithNative = async ({
     // calculate deployment cost
     const isDeployed = await provider.getCode({
         address: forwarder,
-    }).then((code) => code !== "0x");
+    }).then((code) => !!code);
 
     // make estmations
     let deploymentCost = BigInt(0);
@@ -103,7 +103,7 @@ export const quoteFlushTokenWithNative = async ({
             address: forwarderFactories[chainId],
             functionName: 'createForwarder',
             args: [userAddress],
-            account: relayerAccounts[chainId].account,
+            account: walletClients[chainId].account,
         }) * gasPrice);
     }
     const eth = await provider.readContract({
@@ -138,7 +138,7 @@ export const quoteFlushTokenWithNative = async ({
             swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24).toString(), // TODO:
             sqrtPriceLimitX96: 0n.toString(),
             relayerFee: relayerFee.toString(),
-            nonce: "0" // TODO:
+            nonce: isDeployed ? (await getNonce(chainId, forwarder)).toString() : "0"
         }
     }
 }
@@ -174,7 +174,7 @@ export const quoteFlushNative = async ({
     // calculate deployment cost
     const isDeployed = await provider.getCode({
         address: forwarder,
-    }).then((code) => code !== "0x");
+    }).then((code) => !!code);
 
     // make estmations
     let deploymentCost = BigInt(0);
@@ -184,7 +184,7 @@ export const quoteFlushNative = async ({
             address: forwarderFactories[chainId],
             functionName: 'createForwarder',
             args: [userAddress],
-            account: relayerAccounts[chainId].account,
+            account: walletClients[chainId].account,
         }) * gasPrice);
     }
 
@@ -210,7 +210,7 @@ export const quoteFlushNative = async ({
             swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24).toString(), // TODO:
             sqrtPriceLimitX96: 0n.toString(),
             relayerFee: relayerFee.toString(),
-            nonce: "0" // TODO:
+            nonce: isDeployed ? (await getNonce(chainId, forwarder)).toString() : "0"
         }
     }
 }
@@ -222,17 +222,29 @@ export const deployForwarder = ({
     chainId: number;
     userAddress: Address;
 }) => {
-    const provider = providers[chainId as number];
-    const relayer = relayerAccounts[chainId as number];
+    const provider = providers[chainId];
+    const client = walletClients[chainId];
+    const relayer = relayerAccounts[chainId];
+
+    console.log("writeContract", {
+        account: relayer,
+        privateKey: process.env.RELAYER_KEY!,
+        address: forwarderFactories[chainId],
+        abi: ForwarderFactoryABI.find((abi) => abi.name === "getForwarder") as any,
+        functionName: 'createForwarder',
+        args: [userAddress],
+    })
 
     // create forwarder for user
     return provider.simulateContract({
-        account: relayer.account,
+        account: relayer,
         address: forwarderFactories[chainId],
         abi: ForwarderFactoryABI,
         functionName: 'createForwarder',
         args: [userAddress],
-    }).then(({ request }) => relayer.writeContract(request))
+    }).then(({ request }) => client.writeContract(request))
+        .then(hash => provider.waitForTransactionReceipt({ hash }))
+        .then((r) => r.status === "success")
 }
 
 export const getForwarder = async (chainId: number, userAddress: Address) => {
@@ -248,40 +260,51 @@ export const getForwarder = async (chainId: number, userAddress: Address) => {
 
 export const flushTokenWithNative = async (chainId: number, user: Address, params: FlushParams, signature: string) => {
     const provider = providers[chainId];
+    const client = walletClients[chainId];
     const relayer = relayerAccounts[chainId];
 
     // withdraw with native
     return provider.simulateContract({
-        account: relayer.account,
+        account: relayer,
         address: await getForwarder(chainId, user),
         abi: ForwarderABI,
         functionName: 'flushTokenWithNative',
-        args: [params, signature],
-    }).then(({ request }) => relayer.writeContract(request))
+        args: [{
+            token: params.token,
+            amount: params.amount,
+            amountOutMinimum: params.amountOutMinimum,
+            swapFee: params.swapFee,
+            swapDeadline: params.swapDeadline,
+            sqrtPriceLimitX96: params.sqrtPriceLimitX96,
+            relayerFee: params.relayerFee,
+        }, signature],
+    }).then(({ request }) => client.writeContract(request))
 }
-
 
 export const flushNative = async (chainId: number, user: Address, params: FlushParams, signature: string) => {
     const provider = providers[chainId as number];
-    const relayer = relayerAccounts[chainId as number];
+    const client = walletClients[chainId];
+    const relayer = relayerAccounts[chainId];
 
     // withdraw with native
     return provider.simulateContract({
-        account: relayer.account,
+        account: relayer,
         address: await getForwarder(chainId, user),
         abi: ForwarderABI,
         functionName: 'flushNative',
-        args: [params, signature],
-    }).then(({ request }) => relayer.writeContract(request))
+        args: [{
+            token: params.token,
+            amount: params.amount,
+            amountOutMinimum: params.amountOutMinimum,
+            swapFee: params.swapFee,
+            swapDeadline: params.swapDeadline,
+            sqrtPriceLimitX96: params.sqrtPriceLimitX96,
+            relayerFee: params.relayerFee,
+        }, signature],
+    }).then(({ request }) => client.writeContract(request))
 }
 
-export const getUserForwarder = async ({
-    chainId,
-    userAddress,
-}: {
-    chainId: number;
-    userAddress: Address;
-}): Promise<string> => {
+export const getUserForwarder = async (chainId: number, userAddress: Address): Promise<string> => {
     const provider = providers[chainId as number];
 
     return provider.readContract({
@@ -289,5 +312,16 @@ export const getUserForwarder = async ({
         abi: ForwarderFactoryABI,
         functionName: 'getForwarder',
         args: [userAddress],
+    }) as Promise<string>;
+}
+
+export const getNonce = async (chainId: number, forwarder: Address): Promise<string> => {
+    const provider = providers[chainId as number];
+
+    return provider.readContract({
+        address: forwarder,
+        abi: ForwarderABI,
+        functionName: 'getNonce',
+        args: [],
     }) as Promise<string>;
 }

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useCallback, useMemo, useState } from "react";
 import { TokenSelect } from "@/components/token-select";
-import { useAccount, useReadContract, useSignTypedData } from "wagmi";
+import { useAccount, useBalance, useReadContract, useSignTypedData } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
 import ConnectButton from "@/components/connect-button";
 import { ERC20_ABI } from "@/config/abis/ERC20";
@@ -17,16 +17,21 @@ import { ChevronDown } from "lucide-react";
 import { FlushType } from "@/config/abis/ForwarderFactory";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { formatUnits, zeroAddress } from "viem";
 
 export default function Withdraw() {
   const { toast } = useToast();
   const account = useAccount();
+  const nativeBalance = useBalance({
+    address: account.address,
+  })
   const { signTypedDataAsync } = useSignTypedData();
   const chainId = account.chainId ?? 137;
 
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [token, setToken] = useState<Token>(tokens[chainId][0]);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const { data: forwarderAddress } = useQuery({
     queryKey: ["forwarder", account.address],
@@ -39,7 +44,7 @@ export default function Withdraw() {
     enabled: !!account.address && !!account.chainId,
   });
 
-  const { data: balanceBn } = useReadContract({
+  const { data: tokenBalance } = useReadContract({
     address: token.address,
     abi: ERC20_ABI,
     functionName: "balanceOf",
@@ -47,12 +52,14 @@ export default function Withdraw() {
   });
 
   const balance = useMemo(() => {
-    if (balanceBn) {
-      return Number(balanceBn.toString()) / 10 ** token.decimals;
+    if (token.address === zeroAddress) {
+      return Number(formatUnits(nativeBalance.data?.value ?? 0n, nativeBalance.data?.decimals ?? 18));
+    } else if (tokenBalance) {
+      return Number(tokenBalance.toString()) / 10 ** token.decimals;
     } else {
       return 0;
     }
-  }, [balanceBn, token]);
+  }, [tokenBalance, token]);
 
   const isWithdrawDisabled = useMemo(
     () =>
@@ -82,32 +89,66 @@ export default function Withdraw() {
   }, [chainId]);
 
   const withdraw = useCallback(async () => {
-    const signature = await signTypedDataAsync({
-      types: { Flush: FlushType },
-      primaryType: "Flush",
-      message: quote.params,
-    });
+    try {
+      setWithdrawLoading(true);
 
-    setTimeout(() => {
+      const signature = await signTypedDataAsync({
+        domain: {
+          name: "Forwarder",
+          version: "1",
+          chainId,
+          verifyingContract: forwarderAddress,
+        },
+        types: { Flush: FlushType },
+        primaryType: "Flush",
+        message: quote.params,
+      });
+
+      const res = await fetch("/api/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quote,
+          chainId,
+          signature,
+          user: account.address,
+        }),
+      }).then((res) => res.json());
+
+      if (!res.withdrawTx) {
+        throw new Error("Something went wrong");
+      }
+
       toast({
-        title: "Withdraw Successful",
+        title: "Withdraw Ongoing",
         description: "Check your transaction in the explorer",
         action: (
           <ToastAction
             altText="check"
             onClick={() =>
               window.open(
-                account.chain?.blockExplorers.default.url,
+                account.chain?.blockExplorers.default.url +
+                  `/tx/${res.withdrawTx}`,
                 "_blank",
                 "noreferrer"
               )
             }
           >
-            Check
+            Explore
           </ToastAction>
         ),
       });
-    }, 1000);
+
+      setAmount("");
+    } catch (e: any) {
+      toast({
+        variant: "destructive",
+        title: "Withdraw Failed",
+        description: e?.message,
+      });
+    } finally {
+      setWithdrawLoading(false);
+    }
   }, [quote]);
 
   return (
@@ -141,14 +182,14 @@ export default function Withdraw() {
       <div className="space-y-1 w-screen md:max-w-[450px] px-4 mt-2">
         {account.isConnected && isChainSupported && (
           <Button
-            disabled={isWithdrawDisabled || quotePending}
+            disabled={isWithdrawDisabled || quotePending || withdrawLoading}
             className="w-full  font-medium"
             size={"lg"}
             onClick={withdraw}
           >
             {isWithdrawDisabled
               ? "Enter amount"
-              : quotePending
+              : quotePending || withdrawLoading
               ? "Loading..."
               : "Withdraw"}
           </Button>

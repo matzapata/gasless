@@ -1,11 +1,15 @@
-import { Address, createPublicClient, createWalletClient, http, PublicClient, WalletClient } from "viem"
+import { Address, createPublicClient, createWalletClient, Hex, http, PrivateKeyAccount, PublicClient, WalletClient } from "viem"
 import { polygon } from "viem/chains";
+import { privateKeyToAccount } from 'viem/accounts'
+
+// swap config ====================================================================
 
 export const slippage = 97n;
 
 export const swapFee = 3000n;
 
-// public connections
+// providers ======================================================================
+
 export const providers: {
     [chainId: number]: PublicClient;
 } = {
@@ -15,47 +19,51 @@ export const providers: {
     })
 }
 
-// relayer accounts
-export const relayerAccounts: {
+export const walletClients: {
     [chainId: number]: WalletClient
 } = {
     [137]: createWalletClient({
         chain: polygon,
         transport: http(),
-        account: process.env.RELAYER_ACCOUNT! as Address,
-        key: process.env.RELAYER_KEY!,
     })
 }
 
+// relayer accounts ===============================================================
+
+export const relayerAccounts: {
+    [chainId: number]: PrivateKeyAccount
+} = {
+    [137]: privateKeyToAccount("0x" + process.env.RELAYER_KEY as Hex)
+}
+
+// gas costs ======================================================================
 
 // profit per tx
 export const profitPerTxInEth: {
     [chainId: number]: bigint
 } = {
-    [137]: 100000n // TODO:
+    [137]: 200000n 
 }
 
 // cost of executing a flush with swap for eth in units of gas
 export const gasPerTokenFlush: {
     [chainId: number]: bigint
 } = {
-    [137]: 100000n // TODO:
+    [137]: 300000n 
 }
-
 export const gasPerNativeFlush: {
     [chainId: number]: bigint
 } = {
     [137]: 100n // TODO:
 }
 
-// forwarder factories
+// contract deployments ============================================================
+
 export const forwarderFactories: {
     [chainId: number]: `0x${string}`
 } = {
     137: "0x22498dc72F94D40624854bAeB798EDeA4d17f77d"
 };
-
-// forwarder implementations
 export const forwarderImplementations: {
     [chainId: number]: `0x${string}`
 } = {

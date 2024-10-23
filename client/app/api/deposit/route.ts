@@ -1,11 +1,12 @@
 import { getUserForwarder } from "@/lib/forwarder";
 import { type NextRequest } from 'next/server'
+import { Address } from "viem";
 
 
 export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams
-    const userAddress = searchParams.get("userAddress")
     const chainId = searchParams.get("chainId")
+    const userAddress = searchParams.get("userAddress") as Address;
 
     // validations
     if (!userAddress || typeof userAddress !== "string" || !userAddress.startsWith("0x")) {
@@ -13,12 +14,9 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const userForwarder = await getUserForwarder({
-            chainId: Number(chainId),
-            userAddress: userAddress as `0x${string}`,
-        });
+        const forwarder = await getUserForwarder(Number(chainId), userAddress);
 
-        return Response.json({ forwarder: userForwarder });
+        return Response.json({ forwarder });
     } catch (error) {
         return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 400 });
     }
