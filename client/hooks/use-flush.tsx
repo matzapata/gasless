@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useAccount, useSignTypedData } from "wagmi";
 import { Address } from "viem";
 import { FlushType } from "@/config/abis/ForwarderFactory";
+import { FlushQuote } from "@/lib/forwarder";
 
 export const useFlush = (forwarder: Address) => {
   const account = useAccount();
@@ -9,7 +10,7 @@ export const useFlush = (forwarder: Address) => {
   const [isPending, setIsPending] = useState(false);
 
   const flush = useCallback(
-    async (quote: any) => {
+    async (quote: FlushQuote) => {
       try {
         setIsPending(true);
 
@@ -22,7 +23,7 @@ export const useFlush = (forwarder: Address) => {
           },
           types: { Flush: FlushType },
           primaryType: "Flush",
-          message: quote.data.params,
+          message: quote.params,
         });
 
         const res = await fetch("/api/withdraw", {
@@ -39,6 +40,8 @@ export const useFlush = (forwarder: Address) => {
         if (!res.withdrawTx) {
           throw new Error("Something went wrong");
         }
+
+        return res.withdrawTx;
       } catch {
         setIsPending(false);
         throw new Error("Something went wrong");

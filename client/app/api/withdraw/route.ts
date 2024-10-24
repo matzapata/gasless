@@ -25,10 +25,7 @@ export async function POST(req: NextRequest) {
 
   let withdrawTx: string | undefined;
 
-  console.log("quote", quote)
-
   try {
-    console.log("withdraw")
     if (quote.estimate.deployed === false) {
       const success = await deployForwarder({ chainId, userAddress });
 

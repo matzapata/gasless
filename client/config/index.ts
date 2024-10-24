@@ -18,7 +18,6 @@ export const providers: {
         transport: http(),
     })
 }
-
 export const walletClients: {
     [chainId: number]: WalletClient
 } = {
@@ -42,10 +41,10 @@ export const relayerAccounts: {
 export const profitPerTxInEth: {
     [chainId: number]: bigint
 } = {
-    [137]: 200000n 
+    [137]: 300000n 
 }
 
-// cost of executing a flush with swap for eth in units of gas
+// cost of executing txs. Needed when forwarder is not deployed and so we can't estimate
 export const gasPerTokenFlush: {
     [chainId: number]: bigint
 } = {
@@ -54,7 +53,7 @@ export const gasPerTokenFlush: {
 export const gasPerNativeFlush: {
     [chainId: number]: bigint
 } = {
-    [137]: 100n // TODO:
+    [137]: 65000n
 }
 
 // contract deployments ============================================================

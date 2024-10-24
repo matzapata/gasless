@@ -1,5 +1,5 @@
 import { ForwarderFactoryABI } from "@/config/abis/ForwarderFactory";
-import { Address, erc20Abi, formatUnits, getContract, parseUnits, zeroAddress } from "viem";
+import { Address, erc20Abi, getContract, parseUnits, zeroAddress } from "viem";
 import { forwarderFactories, gasPerNativeFlush, gasPerTokenFlush, profitPerTxInEth, providers, walletClients, slippage, swapFee, relayerAccounts } from "@/config";
 import { forwarderImplementations } from "@/config";
 import { ForwarderABI } from "@/config/abis/Forwarder";
@@ -82,7 +82,6 @@ export const quoteFlushTokenWithNative = async ({
 
     // ensure enough balance for withdrawal
     const tokenDecimals = await token.read.decimals();
-    const nativeDecimals = provider.chain?.nativeCurrency.decimals || 18
     const amount = parseUnits(amountDecimal, tokenDecimals);
     const balance = await token.read.balanceOf([forwarder]);
 
@@ -121,11 +120,11 @@ export const quoteFlushTokenWithNative = async ({
 
     return {
         estimate: {
-            nativeOut: formatUnits(nativeOut, nativeDecimals),
-            nativeOutMin: formatUnits(nativeOutMin, nativeDecimals),
-            tokenOut: formatUnits(tokenOut, tokenDecimals),
-            tokenOutMin: formatUnits(tokenOut, tokenDecimals),
-            relayerFee: formatUnits(relayerFee, nativeDecimals),
+            nativeOut: nativeOut.toString(),
+            nativeOutMin: nativeOutMin.toString(),
+            tokenOut: tokenOut.toString(),
+            tokenOutMin: tokenOut.toString(),
+            relayerFee: relayerFee.toString(),
             deployed: isDeployed,
             forwarder: forwarder,
             enoughForFees: true,
@@ -176,7 +175,7 @@ export const quoteFlushNative = async ({
         address: forwarder,
     }).then((code) => !!code);
 
-    // make estmations
+    // make estimations
     let deploymentCost = BigInt(0);
     if (!isDeployed) {
         deploymentCost = BigInt(await provider.estimateContractGas({
@@ -191,17 +190,13 @@ export const quoteFlushNative = async ({
     const withdrawalFee = gasPerNativeFlush[chainId as number] * gasPrice;
     const relayerFee = deploymentCost + withdrawalFee + profitPerTxInEth[chainId as number];
 
-    // 100000000000000000n
-    // 100003325179828000n
-
-    console.log("balance", balance, amount, relayerFee, amount + relayerFee)
     return {
         estimate: {
-            nativeOut: formatUnits(amount, nativeDecimals),
-            nativeOutMin: formatUnits(amount, nativeDecimals),
+            nativeOut: amount.toString(),
+            nativeOutMin: amount.toString(),
             tokenOut: "0",
             tokenOutMin: "0",
-            relayerFee: formatUnits(relayerFee, nativeDecimals),
+            relayerFee: relayerFee.toString(),
             deployed: isDeployed,
             forwarder: forwarder,
             enoughForFees: balance >= amount + relayerFee,

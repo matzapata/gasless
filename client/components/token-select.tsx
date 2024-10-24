@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -6,10 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { ChevronDown, Coins, SearchIcon, X } from "lucide-react";
+import { ChevronDown, Coins, SearchIcon, VerifiedIcon, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Token } from "@/config/tokens";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { shortenAddress } from "@/lib/strings";
 
 export const TokenSelect: React.FC<{
@@ -21,9 +23,24 @@ export const TokenSelect: React.FC<{
 }> = (props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const options = useMemo(
+    () =>
+      props.options
+        .filter((option) =>
+          option.symbol.toLowerCase().startsWith(search.toLowerCase())
+        )
+        .sort((a, b) => {
+          if (b.verified === a.verified) {
+            return 0;
+          }
+          return b.verified ? 1 : -1;
+        }),
+    [props.options, search]
+  );
 
   if (!mounted) {
     // Return null during server-side rendering
@@ -41,10 +58,6 @@ export const TokenSelect: React.FC<{
       </div>
     );
   }
-
-  const filteredOptions = props.options.filter((option) =>
-    option.symbol.toLowerCase().startsWith(search.toLowerCase())
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -107,7 +120,7 @@ export const TokenSelect: React.FC<{
             </span>
           </div>
           <ScrollArea className="h-96">
-            {filteredOptions.map((token) => (
+            {options.map((token) => (
               <TokenButton
                 key={token.address}
                 token={token}
@@ -149,7 +162,12 @@ function TokenButton(props: {
         )}
       </div>
       <div className="text-left">
-        <span className="block text-base font-medium">{props.token.name}</span>
+        <div className="flex items-center space-x-2">
+          <span className="block text-base font-medium items-center">
+            {props.token.name}
+          </span>
+          {props.token.verified && <VerifiedIcon className="h-3 w-3 text-muted-foreground" />}
+        </div>
         <span className="block text-sm text-muted-foreground group-hover:hidden">
           {props.token.symbol}
         </span>

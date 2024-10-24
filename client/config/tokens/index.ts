@@ -5,6 +5,7 @@ export type Token = {
     symbol: string
     address: `0x${string}`
     decimals: number
+    verified?: boolean
     image?: string
 }
 

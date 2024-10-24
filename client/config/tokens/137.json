@@ -7,6 +7,7 @@
         "decimals": 18,
         "priceUSD": "0.3736",
         "coinKey": "POL",
+        "verified": true,
         "image": "https://static.debank.com/image/matic_token/logo_url/matic/6f5a6b6f0732a7a235131bd7804d357c.png"
     },
     {
@@ -27,6 +28,7 @@
         "decimals": 6,
         "priceUSD": "0.99974",
         "coinKey": "USDT",
+        "verified": true,
         "image": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png"
     },
     {
@@ -1710,6 +1712,7 @@
         "name": "USD Coin",
         "decimals": 6,
         "priceUSD": "1.0002000400080016",
+        "verified": true,
         "coinKey": "USDC",
         "image": "https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png"
     },

@@ -4,42 +4,36 @@ import { QRCode } from "react-qrcode-logo";
 import { useAccount } from "wagmi";
 import ConnectButton from "@/components/connect-button";
 import { useCopyToClipboard } from "@/hooks/use-copy";
-import { useQuery } from "@tanstack/react-query";
 import { ClipboardCopy } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useForwarder } from "@/hooks/use-forwarder";
 
 export default function DepositCard() {
   const account = useAccount();
+  const {data: forwarder, isPending: forwarderIsPending } = useForwarder();
   const { copied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
-
-  const { data: forwarderAddress, isLoading } = useQuery({
-    queryKey: ["forwarder", account.address],
-    queryFn: () =>
-      fetch(
-        `/api/deposit?userAddress=${account.address}&chainId=${account.chainId}`
-      )
-        .then((res) => res.json())
-        .then((res) => res.forwarder),
-    enabled: !!account.address && !!account.chainId,
-  });
 
   return (
     <div className="min-h-screen flex flex-col items-center md:pt-32 pt-10 ">
-      <div className="space-y-1 w-screen md:max-w-[450px] px-4">
-        {account.isConnected && isLoading ? (
+      <div className={cn("w-screen md:max-w-[450px] px-4", {
+        "space-y-1": account.isConnected,
+        "space-y-2": !account.isConnected,
+      })}>
+        {account.isConnected && forwarderIsPending ? (
           <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
             <p className="text-center text-sm">Loading...</p>
           </div>
-        ) : forwarderAddress ? (
+        ) : forwarder ? (
           <div className="bg-muted px-4 py-6 space-y-4 rounded-xl">
             <button
               disabled={copied}
-              onClick={() => copyToClipboard(forwarderAddress as string)}
+              onClick={() => copyToClipboard(forwarder)}
               className="hover:text-accent-foreground text-secondary-foreground w-min mx-auto px-4 rounded-full flex justify-center items-center space-x-2"
             >
               <span className="font-medium">
                 {copied
                   ? "Copied!"
-                  : shortenAddress(forwarderAddress as string)}
+                  : shortenAddress(forwarder)}
               </span>
               <ClipboardCopy className="h-4 w-4" />
             </button>
@@ -47,7 +41,7 @@ export default function DepositCard() {
             <div className="flex justify-center">
               <QRCode
                 id="qrCode"
-                value={forwarderAddress as string}
+                value={forwarder}
                 size={300}
                 bgColor={"#262626"}
                 fgColor={"#71717a"}
