@@ -6,67 +6,39 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { TokenSelect } from "@/components/token-select";
-import { useAccount, useBalance, useReadContract, useSignTypedData } from "wagmi";
+import { useAccount } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
 import ConnectButton from "@/components/connect-button";
-import { ERC20_ABI } from "@/config/abis/ERC20";
-import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
-import { FlushType } from "@/config/abis/ForwarderFactory";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { formatUnits, zeroAddress } from "viem";
+import { useForwarder } from "@/hooks/use-forwarder";
+import { useTokenBalance } from "@/hooks/use-token-balance";
+import { useQuote } from "@/hooks/use-quote";
+import { useFlush } from "@/hooks/use-flush";
 
 export default function Withdraw() {
-  const { toast } = useToast();
   const account = useAccount();
-  const nativeBalance = useBalance({
-    address: account.address,
-  })
-  const { signTypedDataAsync } = useSignTypedData();
+  const { toast } = useToast();
   const chainId = account.chainId ?? 137;
 
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [token, setToken] = useState<Token>(tokens[chainId][0]);
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
-  const { data: forwarderAddress } = useQuery({
-    queryKey: ["forwarder", account.address],
-    queryFn: () =>
-      fetch(
-        `/api/deposit?userAddress=${account.address}&chainId=${account.chainId}`
-      )
-        .then((res) => res.json())
-        .then((res) => res.forwarder),
-    enabled: !!account.address && !!account.chainId,
-  });
-
-  const { data: tokenBalance } = useReadContract({
-    address: token.address,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: [forwarderAddress as string],
-  });
-
-  const balance = useMemo(() => {
-    if (token.address === zeroAddress) {
-      return Number(formatUnits(nativeBalance.data?.value ?? 0n, nativeBalance.data?.decimals ?? 18));
-    } else if (tokenBalance) {
-      return Number(tokenBalance.toString()) / 10 ** token.decimals;
-    } else {
-      return 0;
-    }
-  }, [tokenBalance, token]);
+  const { data: forwarder } = useForwarder();
+  const balance = useTokenBalance(forwarder, token);
+  const { quote, isPending: isQuotePending } = useQuote(token.address, amount);
+  const { flush, isPending: isFlushPending } = useFlush(forwarder);
 
   const isWithdrawDisabled = useMemo(
     () =>
       amount === "" ||
       Number(amount) <= 0 ||
       !account.address ||
-      Number(amount) > balance,
+      Number(amount) > Number(balance.formatted),
     [amount, account.address]
   );
 
@@ -75,79 +47,13 @@ export default function Withdraw() {
     [account.chain]
   );
 
-  const { data: quote, isPending: quotePending } = useQuery({
-    queryKey: [account.address ?? "-", token.address, amount],
-    queryFn: () =>
-      fetch(
-        `/api/estimate?user=${account.address}&token=${token.address}&amount=${amount}&chain=${account.chainId}`
-      ).then((res) => res.json()),
-    enabled: !isWithdrawDisabled,
-  });
-
   const nativeCurrency = useMemo(() => {
     return account.chain?.nativeCurrency.symbol ?? "ETH";
   }, [chainId]);
 
-  const withdraw = useCallback(async () => {
-    try {
-      setWithdrawLoading(true);
-
-      const signature = await signTypedDataAsync({
-        domain: {
-          name: "Forwarder",
-          version: "1",
-          chainId,
-          verifyingContract: forwarderAddress,
-        },
-        types: { Flush: FlushType },
-        primaryType: "Flush",
-        message: quote.params,
-      });
-
-      const res = await fetch("/api/withdraw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quote,
-          chainId,
-          signature,
-          user: account.address,
-        }),
-      }).then((res) => res.json());
-
-      if (!res.withdrawTx) {
-        throw new Error("Something went wrong");
-      }
-
-      toast({
-        title: "Withdraw Ongoing",
-        description: "Check your transaction in the explorer",
-        action: (
-          <ToastAction
-            altText="check"
-            onClick={() =>
-              window.open(
-                account.chain?.blockExplorers.default.url +
-                  `/tx/${res.withdrawTx}`,
-                "_blank",
-                "noreferrer"
-              )
-            }
-          >
-            Explore
-          </ToastAction>
-        ),
-      });
-
-      setAmount("");
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
-      });
-    } finally {
-      setWithdrawLoading(false);
-    }
+  const receivesToken = useMemo(() => {
+    console.log("quote", quote);
+    return false;
   }, [quote]);
 
   return (
@@ -156,7 +62,7 @@ export default function Withdraw() {
         <div className="space-y-1">
           <TokenSelect
             value={token}
-            balance={balance ?? 0}
+            balance={balance.formatted}
             onSelect={setToken}
             options={tokens[chainId] || []}
           />
@@ -181,14 +87,44 @@ export default function Withdraw() {
       <div className="space-y-1 w-screen md:max-w-[450px] px-4 mt-2">
         {account.isConnected && isChainSupported && (
           <Button
-            disabled={isWithdrawDisabled || quotePending || withdrawLoading}
+            disabled={isWithdrawDisabled || isQuotePending || isFlushPending}
             className="w-full  font-medium"
             size={"lg"}
-            onClick={withdraw}
+            onClick={() => {
+              setAmount("");
+              flush(quote)
+                .then((res: any) => {
+                  toast({
+                    title: "Withdraw Ongoing",
+                    description: "Check your transaction in the explorer",
+                    action: (
+                      <ToastAction
+                        altText="check"
+                        onClick={() =>
+                          window.open(
+                            account.chain?.blockExplorers.default.url +
+                              `/tx/${res.withdrawTx}`,
+                            "_blank",
+                            "noreferrer"
+                          )
+                        }
+                      >
+                        Explore
+                      </ToastAction>
+                    ),
+                  });
+                })
+                .catch((err: any) => {
+                  toast({
+                    title: "Withdraw Failed",
+                    description: err.message,
+                  });
+                });
+            }}
           >
             {isWithdrawDisabled
               ? "Enter amount"
-              : quotePending || withdrawLoading
+              : isQuotePending || isFlushPending
               ? "Loading..."
               : "Withdraw"}
           </Button>
@@ -200,8 +136,13 @@ export default function Withdraw() {
               <div className="flex justify-between items-center cursor-pointer py-2">
                 <span className="text-sm">
                   Receive ~{quote.estimate.nativeOut.slice(0, 6)}{" "}
-                  {nativeCurrency} and {quote.estimate.tokenOut.slice(0, 6)}{" "}
-                  {token.symbol}
+                  {nativeCurrency}
+                  {receivesToken && (
+                    <span>
+                      and {quote.estimate.tokenOut.slice(0, 6)}{" "}
+                      {token.symbol}
+                    </span>
+                  )}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </div>
@@ -214,11 +155,15 @@ export default function Withdraw() {
                 </span>
                 <div className="text-right">
                   <span className="text-sm block">
-                    {quote.estimate.nativeOutMin.slice(0, 6)} {nativeCurrency}
+                    {quote.estimate.nativeOutMin.slice(0, 6)}{" "}
+                    {nativeCurrency}
                   </span>
-                  <span className="text-sm block">
-                    {quote.estimate.tokenOutMin.slice(0, 6)} {token.symbol}
-                  </span>
+                  {receivesToken && (
+                    <span className="text-sm block">
+                      {quote.estimate.tokenOutMin.slice(0, 6)}{" "}
+                      {token.symbol}
+                    </span>
+                  )}
                 </div>
               </div>
 

@@ -166,7 +166,7 @@ export const quoteFlushNative = async ({
     const nativeDecimals = provider.chain?.nativeCurrency.decimals || 18
     const amount = parseUnits(amountDecimal, nativeDecimals);
     const balance = await provider.getBalance({ address: forwarder });
-
+    
     if (balance < amount) {
         throw new Error("Insufficient balance");
     }
@@ -191,6 +191,10 @@ export const quoteFlushNative = async ({
     const withdrawalFee = gasPerNativeFlush[chainId as number] * gasPrice;
     const relayerFee = deploymentCost + withdrawalFee + profitPerTxInEth[chainId as number];
 
+    // 100000000000000000n
+    // 100003325179828000n
+
+    console.log("balance", balance, amount, relayerFee, amount + relayerFee)
     return {
         estimate: {
             nativeOut: formatUnits(amount, nativeDecimals),

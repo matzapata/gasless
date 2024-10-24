@@ -14,7 +14,7 @@ import { shortenAddress } from "@/lib/strings";
 
 export const TokenSelect: React.FC<{
   value: Token;
-  balance?: number;
+  balance?: string;
   loading?: boolean;
   options: Token[];
   onSelect: (token: Token) => void;
