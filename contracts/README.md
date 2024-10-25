@@ -1,13 +1,13 @@
-# Sample Hardhat Project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+# Gasless contracts
 
-Try running some of the following tasks:
+# Commands
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.ts
+```bash 
+# deploy
+npx hardhat run ./scripts/forwarder/deploy.ts --network polygon
+
+# verify
+npx hardhat verify --network polygon {address} {constructor params}
+npx hardhat verify --network polygon {address} 0xE592427A0AEce92De3Edee1F18E0157C05861564 0x5e55c9e631fae526cd4b0526c4818d6e0a9ef0e3 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
 ```

@@ -23,7 +23,8 @@ interface IForwarderEvents {
     /// @notice Emitted when a token is flushed
     /// @param token The token that was flushed
     /// @param value The amount flushed
-    event ForwarderFlushed(address token, uint256 value);
+    /// @param fee The fee of the flush
+    event ForwarderFlushed(address token, uint256 value, uint256 fee);
 }
 
 /// @title Forwarder interface

@@ -80,7 +80,7 @@ contract Forwarder is IForwarder, Swapper, Initializable {
     function flushToken(address token, uint256 amount) external {
         IERC20(token).transfer(forwardTo, amount);
 
-        emit ForwarderFlushed(token, amount);
+        emit ForwarderFlushed(token, amount, 0);
     }
 
     /// @inheritdoc IForwarder
@@ -102,7 +102,7 @@ contract Forwarder is IForwarder, Swapper, Initializable {
             revert FailedEthTransfer(forwardTo, params.amount);
         }
 
-        emit ForwarderFlushed(address(0), params.amount);
+        emit ForwarderFlushed(address(0), params.amount, params.relayerFee);
     }
 
     /// @inheritdoc	IForwarder
@@ -124,19 +124,27 @@ contract Forwarder is IForwarder, Swapper, Initializable {
             revert NotEnoughForFees(params.relayerFee, amountOut);
         }
 
+        // send fee to relayer
+        (bool success, ) = msg.sender.call{value: params.relayerFee}("");
+        if (success == false) {
+            revert FailedEthTransfer(forwardTo, params.relayerFee);
+        }
+
         // send the ETH to the recipient address
         uint256 forwardAmount = amountOut - params.relayerFee;
-        (bool success, ) = forwardTo.call{value: forwardAmount}("");
+        (success, ) = forwardTo.call{value: forwardAmount}("");
         if (success == false) {
             revert FailedEthTransfer(forwardTo, forwardAmount);
         }
 
-        IERC20(params.token).transfer(forwardTo, params.amount);
+        emit ForwarderFlushed(address(0), forwardAmount, params.relayerFee);
 
-        // send fee to relayer
-        (success, ) = msg.sender.call{value: params.relayerFee}("");
-        if (success == false) {
-            revert FailedEthTransfer(forwardTo, params.relayerFee);
+        // send token to recipient
+        uint256 tokenBalance = IERC20(params.token).balanceOf(address(this));
+        if (tokenBalance > 0) {
+            IERC20(params.token).transfer(forwardTo, tokenBalance);
+
+            emit ForwarderFlushed(params.token, tokenBalance, 0);
         }
     }
 
@@ -155,7 +163,10 @@ contract Forwarder is IForwarder, Swapper, Initializable {
     receive() external payable {}
 
     /// @dev Returns the domain separator for the current chain.
-    function _buildDomainSeparator(string memory name, string memory version) private view returns (bytes32) {
+    function _buildDomainSeparator(
+        string memory name,
+        string memory version
+    ) private view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
