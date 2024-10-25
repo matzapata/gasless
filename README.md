@@ -15,11 +15,6 @@ The generated address is fixed to your wallet so you can avoid first steps for n
 
 Also YOU and only YOU own this wallet, any time you want you can avoid the website and go straight to the contract to withdraw your tokens, even from the explorer, only catch is you'll need gas. Gassless is a relayer that still needs your signature to execute transactions and the forwarder forward address is fixed so tokens can only go your way.
 
-
-## Demo
-
-<video src="assets/demo.mov" controls></video>
-
 ## Screenshots
 
 ![](./assets/landing.png)
