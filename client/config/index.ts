@@ -41,7 +41,7 @@ export const relayerAccounts: {
 export const profitPerTxInEth: {
     [chainId: number]: bigint
 } = {
-    [137]: 300000n 
+    [137]: 100000n 
 }
 
 // cost of executing txs. Needed when forwarder is not deployed and so we can't estimate

@@ -127,7 +127,7 @@ export const quoteFlushTokenWithNative = async ({
             relayerFee: relayerFee.toString(),
             deployed: isDeployed,
             forwarder: forwarder,
-            enoughForFees: true,
+            enoughForFees: nativeOut >= 0,
         },
         params: {
             token: tokenAddress,

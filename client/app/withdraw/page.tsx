@@ -149,12 +149,12 @@ export default function Withdraw() {
             <CollapsibleTrigger asChild>
               <div className="flex justify-between items-center cursor-pointer py-2">
                 <span className="text-sm">
-                  Receive ~
+                  Receive{" "}
                   {formatUnits(BigInt(quote.estimate.nativeOut), nativeDecimals)}{" "}
                   {nativeCurrency}
                   {receivesToken && (
                     <span>
-                      and {formatUnits(BigInt(quote.estimate.tokenOut), token.decimals)}{" "}
+                      {" and "}{formatUnits(BigInt(quote.estimate.tokenOut), token.decimals)}{" "}
                       {token.symbol}
                     </span>
                   )}
