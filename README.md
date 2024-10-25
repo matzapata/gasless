@@ -18,9 +18,7 @@ Also YOU and only YOU own this wallet, any time you want you can avoid the websi
 
 ## Demo
 
-<video controls>
-  <source src="./assets/demo.mp4" type="video/mp4">
-</video>
+<video src="assets/demo.mov" controls></video>
 
 ## Screenshots
 
