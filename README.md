@@ -5,7 +5,7 @@ Receive any token without any gas and keep rolling.
 
 Somebody wants to send you crypto, you have a wallet but no native gas to move them forward so those first tokens are destined to be trapped there...
 
-1. Go to [gasless](https://gassless-opal.vercel.app)
+1. Go to [gasless](https://gasless.mzslabs.com)
 2. Go to deposit, connect the wallet in which you want your tokens
 3. Copy the generated address and share that instead of your wallet
 4. Once the payment is made, go to withdraw, select the token and the amount you want to receive in gas
