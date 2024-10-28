@@ -9,6 +9,7 @@ interface IForwarderErrors {
     error EmptyBalance();
     error NotEnoughForFees(uint256 requested, uint256 actual);
     error FailedEthTransfer(address receipient, uint256 amount);
+    error FailedTransfer(address receipient, address token, uint256 amount);
     error FailedTokenTransfer(
         address receipient,
         address token,

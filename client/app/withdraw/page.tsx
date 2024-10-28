@@ -46,12 +46,12 @@ export default function Withdraw() {
       !quote.error &&
       quote?.estimate.enoughForFees &&
       Number(balance.formatted) > Number(amount),
-    [amount, quote]
+    [amount, quote, balance?.formatted]
   );
 
   const insufficientFunds = useMemo(() => {
     return !isQuotePending && (quote?.error || !quote?.estimate.enoughForFees);
-  }, [quote]);
+  }, [quote, isQuotePending]);
 
   const onFlushClick = useCallback(() => {
     setAmount("");

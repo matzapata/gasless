@@ -61,10 +61,10 @@ export const gasPerNativeFlush: {
 export const forwarderFactories: {
     [chainId: number]: `0x${string}`
 } = {
-    137: "0x5DE0035a215684578bABe97e19B50d35EC120755"
+    137: "0x369031DE215c03C2ef84012AFa64AC56f8FA5655"
 };
 export const forwarderImplementations: {
     [chainId: number]: `0x${string}`
 } = {
-    137: "0xc1451C94C2AE786d747738B5f18d63596E9869be"
+    137: "0xE78065821ed30571353E0C9f29AdfF9dD30df8d2"
 };

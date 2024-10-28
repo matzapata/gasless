@@ -11,6 +11,9 @@ contract Swapper {
     IQuoter public swapQuoter;
     ISwapRouter public swapRouter;
 
+    error FailedApprove();
+    error NotEnoughFunds();
+
    function _initialize(
         ISwapRouter _swapRouter,
         IQuoter _swapQuoter,
@@ -29,7 +32,17 @@ contract Swapper {
         uint256 deadline,
         uint160 sqrtPriceLimitX96
     ) internal returns (uint256) {
-        IERC20(token).approve(address(swapRouter), amount);
+        if (IERC20(token).balanceOf(address(this)) < amount) {
+            revert NotEnoughFunds();
+        }
+
+        if (IERC20(token).allowance(address(this), address(swapRouter)) < amount) {
+            bool success = IERC20(token).approve(address(swapRouter), 2**256 - 1);
+
+            if (success == false) {
+                revert FailedApprove();
+            }
+        }
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
@@ -39,7 +52,7 @@ contract Swapper {
                 amountIn: amount,
                 amountOutMinimum: amountOutMinimum, // slippage of 3%
                 fee: fee, // liquidity providers fee. example 3000 bps = 0.3%
-                deadline: deadline, // 5 minutes from the current block time
+                deadline: deadline,
                 sqrtPriceLimitX96: sqrtPriceLimitX96
             });
 

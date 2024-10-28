@@ -134,7 +134,7 @@ export const quoteFlushTokenWithNative = async ({
             amount: amount.toString(),
             amountOutMinimum: nativeOutMin.toString(),
             swapFee: swapFee.toString(),
-            swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24).toString(), // TODO:
+            swapDeadline: BigInt(Date.now() + 1000 * 60 * 5).toString(),
             sqrtPriceLimitX96: 0n.toString(),
             relayerFee: relayerFee.toString(),
             nonce: isDeployed ? (await getNonce(chainId, forwarder)).toString() : "0"
@@ -206,7 +206,7 @@ export const quoteFlushNative = async ({
             amount: amount.toString(),
             amountOutMinimum: amount.toString(),
             swapFee: swapFee.toString(),
-            swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24).toString(), // TODO:
+            swapDeadline: BigInt(Date.now() + 1000 * 60 * 5).toString(), 
             sqrtPriceLimitX96: 0n.toString(),
             relayerFee: relayerFee.toString(),
             nonce: isDeployed ? (await getNonce(chainId, forwarder)).toString() : "0"

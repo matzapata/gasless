@@ -142,7 +142,10 @@ contract Forwarder is IForwarder, Swapper, Initializable {
         // send token to recipient
         uint256 tokenBalance = IERC20(params.token).balanceOf(address(this));
         if (tokenBalance > 0) {
-            IERC20(params.token).transfer(forwardTo, tokenBalance);
+            success = IERC20(params.token).transfer(forwardTo, tokenBalance);
+            if (success == false) {
+                revert FailedTransfer(forwardTo, params.token, tokenBalance);
+            }
 
             emit ForwarderFlushed(params.token, tokenBalance, 0);
         }
