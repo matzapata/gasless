@@ -8,6 +8,7 @@ export enum ChainId {
 }
 
 interface INetworkConfig {
+    NAME: string;
     TOKENS: { symbol: string, address: string }[],
     RPC_URL: string;
     UNISWAP_ROUTER: string,
@@ -26,6 +27,7 @@ export const networkConfig: {
     [chainId: number]: INetworkConfig
 } = {
     [ChainId.OPTIMISM]: {
+        NAME: "optimism",
         TOKENS: optimismTokens,
         RPC_URL: useEnv(EnvVar.OPT_RPC_URL),
         UNISWAP_ROUTER: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
@@ -37,6 +39,7 @@ export const networkConfig: {
         SWAP_FEE: BigInt(3000),
     },
     [ChainId.POLYGON]: {
+        NAME: "polygon",
         TOKENS: polygonTokens,
         RPC_URL: useEnv(EnvVar.POLYGON_RPC_URL),
         UNISWAP_ROUTER: "0xE592427A0AEce92De3Edee1F18E0157C05861564",

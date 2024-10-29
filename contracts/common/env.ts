@@ -7,6 +7,7 @@ export enum EnvVar {
     POLYGON_RPC_URL = "POLYGON_RPC_URL",
     PRIVATE_KEY = "PRIVATE_KEY",
     POLYGONSCAN_API_KEY = "POLYGONSCAN_API_KEY",
+    OPTIMISTIC_API_KEY = "OPTIMISTIC_API_KEY",
 }
 
 export const useEnv = (key: EnvVar): string => {

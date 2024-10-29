@@ -1,4 +1,5 @@
 import polyTokens from "./137.json"
+import optTokens from "./10.json"
 
 export type Token = {
     name: string
@@ -12,5 +13,6 @@ export type Token = {
 export const tokens: {
     [chainId: number]: Token[]
 } = {
-    137: polyTokens as Token[]
+    137: polyTokens as Token[],
+    10: optTokens as Token[]
 }

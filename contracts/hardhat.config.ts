@@ -29,6 +29,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       polygon: useEnv(EnvVar.POLYGONSCAN_API_KEY),
+      optimisticEthereum: useEnv(EnvVar.OPTIMISTIC_API_KEY),
     }
   }
 };

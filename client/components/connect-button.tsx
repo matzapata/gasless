@@ -57,40 +57,35 @@ export default function ConnectButton() {
                 );
               }
               return (
-                <button
-                  onClick={openAccountModal}
-                  type="button"
-                  className="bg-muted px-4 py-3 rounded-xl w-full text-left overflow-x-scroll"
-                >
+                <div className="bg-muted px-4 py-3 rounded-xl w-full text-left overflow-x-scroll">
                   <span className="text-sm text-muted-foreground block">
                     Forward tokens to:
                   </span>
                   <div className="flex items-center justify-between">
-                    <span>{shortenAddress(account.address)}</span>
+                    <button onClick={openAccountModal}>
+                      {shortenAddress(account.address)}
+                    </button>
 
-                    {chain.hasIcon && (
-                      <div
-                        className=""
-                        style={{
-                          background: chain.iconBackground,
-                          width: 16,
-                          height: 16,
-                          borderRadius: 999,
-                          overflow: "hidden",
-                          marginRight: 4,
-                        }}
-                      >
-                        {chain.iconUrl && (
-                          <img
-                            alt={chain.name ?? "Chain icon"}
-                            src={chain.iconUrl}
-                            style={{ width: 16, height: 16 }}
-                          />
-                        )}
-                      </div>
-                    )}
+                    <button
+                      onClick={openChainModal}
+                      className=""
+                      style={{
+                        background: chain.iconBackground,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 999,
+                        overflow: "hidden",
+                        marginRight: 4,
+                      }}
+                    >
+                      <img
+                        alt={chain.name ?? "Chain icon"}
+                        src={chain.iconUrl}
+                        style={{ width: 20, height: 20 }}
+                      />
+                    </button>
                   </div>
-                </button>
+                </div>
               );
             })()}
           </div>

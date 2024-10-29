@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import hre from 'hardhat';
 import { sha3 } from '@netgum/utils';
 import { networkConfig } from '../common/config';
+import { estimateTxGas } from './utils/estimate';
 
 describe('ForwarderFactory', function () {
   async function deployFixture() {
@@ -66,26 +67,6 @@ describe('ForwarderFactory', function () {
       }
     });
 
-    it('Cost of deployment should be below fee', async function () {
-      const { forwarderFactory, otherAccount } =
-        await loadFixture(deployFixture);
-
-      try {
-        const tx = await forwarderFactory.createForwarder(
-          otherAccount.address,
-        );
-        const receipt = await tx.wait();
-        if (!receipt) {
-          throw new Error('No receipt');
-        }
-        const cost = receipt.gasUsed * receipt.gasPrice;
-        console.log(`Cost: ${hre.ethers.formatEther(cost)} wei`);
-        console.log("Recommended fee greater than: ", cost);
-      } catch (error) {
-        console.log(error);
-      }
-    });
-
     it('Should fail to create contract if it already exists', async function () {
       const { forwarderFactory, otherAccount } =
         await loadFixture(deployFixture);
@@ -132,6 +113,19 @@ describe('ForwarderFactory', function () {
       expect(events).to.have.lengthOf(1);
       expect(events[0].args[0]).to.exist;
       expect(events[0].args[1]).to.equal(forwardTo);
+    });
+
+
+    it('Gas estimate', async function () {
+      const { forwarderFactory, otherAccount } =
+        await loadFixture(deployFixture);
+
+      await estimateTxGas("createForwarder",
+        await forwarderFactory.createForwarder(
+          otherAccount.address,
+        )
+      )
+
     });
   });
 });

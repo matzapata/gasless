@@ -1,10 +1,10 @@
 import { http, cookieStorage, createConfig, createStorage } from 'wagmi'
-import { polygon } from 'wagmi/chains'
+import { optimism, polygon } from 'wagmi/chains'
 import { injected, metaMask, walletConnect } from 'wagmi/connectors'
 
 export function getConfig() {
   return createConfig({
-    chains: [polygon],
+    chains: [polygon, optimism],
     connectors: [
       injected(),
       walletConnect({
@@ -18,6 +18,7 @@ export function getConfig() {
     ssr: true,
     transports: {
       [polygon.id]: http(),
+      [optimism.id]: http(),
     },
   })
 }

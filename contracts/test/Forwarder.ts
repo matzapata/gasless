@@ -4,6 +4,7 @@ import hre, { ethers } from 'hardhat';
 import { networkConfig } from '../common/config';
 import { whileImpersonating } from './utils/impersonating';
 import { authorizeFlush } from './utils/flush-auth';
+import { estimateTxGas } from './utils/estimate';
 
 describe('Forwarder', function () {
   async function deployFixture() {
@@ -141,7 +142,7 @@ describe('Forwarder', function () {
       ).to.be.reverted;
     })
 
-    it("Can flush all token as native",async function () {
+    it("Can flush all token as native", async function () {
       const { forwarder, forwardTo, config, whaleToken } = await loadFixture(deployFixture);
 
       const userEthBalanceBefore = await hre.ethers.provider.getBalance(forwardTo.address);
@@ -176,6 +177,33 @@ describe('Forwarder', function () {
       expect(userEthBalanceAfter).to.be.greaterThan(userEthBalanceBefore);
       expect(userTokenBalanceAfter).to.be.equal(userTokenBalanceBefore + forwarderTokenBalanceBefore - flushParams.amount);
       expect(await whaleToken.balanceOf(await forwarder.getAddress())).to.be.equal(0n);
+    })
+
+    it("Gas estimate", async function () {
+      const { forwarder, forwardTo, config, whaleToken } = await loadFixture(deployFixture);
+
+
+      const flushParams = {
+        token: await whaleToken.getAddress(),
+        amount: 10000000n,
+        amountOutMinimum: 10n, // This is actually computed with quote
+        swapFee: 3000n, // 3000 bps = 0.3%
+        swapDeadline: BigInt(Date.now() + 1000 * 60 * 60 * 24),
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      const flushAuth = await authorizeFlush(
+        forwardTo,
+        await forwarder.getAddress(),
+        flushParams
+      )
+
+      await estimateTxGas("flushTokenWithNative",
+        await forwarder.flushTokenWithNative(
+          flushParams,
+          flushAuth
+        )
+      )
     })
   })
 
@@ -270,6 +298,37 @@ describe('Forwarder', function () {
           "0x"
         )
       ).to.be.reverted;
+    })
+
+    it("Gas estimate", async function () {
+      const { forwarder, forwarderAddress, owner, forwardTo, config } = await loadFixture(deployFixture);
+
+      await owner.sendTransaction({
+        to: forwarderAddress,
+        value: hre.ethers.parseEther('2.0'),
+      });
+
+      const flushParams = {
+        token: ethers.ZeroAddress,
+        amount: 10000000n,
+        amountOutMinimum: 10000000n,
+        swapFee: 0n,
+        swapDeadline: 0n,
+        sqrtPriceLimitX96: 0n,
+        relayerFee: config.RElAYER_FEE
+      }
+      const flushAuth = await authorizeFlush(
+        forwardTo,
+        await forwarder.getAddress(),
+        flushParams
+      )
+
+      await estimateTxGas("flushNative",
+        await forwarder.flushNative(
+          flushParams,
+          flushAuth
+        )
+      )
     })
   })
 });

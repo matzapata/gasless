@@ -25,6 +25,12 @@ export default function Info() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
+              <AccordionTrigger>Is my token supported?</AccordionTrigger>
+              <AccordionContent>
+              As a basic rule the most popular tokens are supported. If you have something more unique may be worth checking in the withdraw page. If you already sent it don&apos;t worry you can still recover them from the etherscan page.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
               <AccordionTrigger>Can I avoid the relayer?</AccordionTrigger>
               <AccordionContent>
                 Yes. You&apos;re totally free to interact with the forwarder without our relayer, it&apos;s just simpler with it. Just take your forwarder address and find the contract in etherscan. Use the receiver account to call the forwarder without a signature, or assemble the signature to use your own relayer. Only catch is you&apos;ll need native.

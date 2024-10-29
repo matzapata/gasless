@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { TokenSelect } from "@/components/token-select";
 import { useAccount } from "wagmi";
 import { Token, tokens } from "@/config/tokens";
@@ -35,10 +35,14 @@ export default function Withdraw() {
   const { quote, isPending: isQuotePending } = useQuote(token.address, amount);
   const { flush, isPending: isFlushPending } = useFlush(forwarder);
 
-  const isChainSupported = !!account.chain && account.chain.id === 137;
+  const isChainSupported = !!account.chain && [10, 137].includes(account.chain.id);
   const nativeCurrency = account.chain?.nativeCurrency.symbol ?? "ETH";
   const nativeDecimals = account.chain?.nativeCurrency.decimals ?? 18;
   const receivesToken = BigInt(quote?.estimate?.tokenOut ?? 0) > 0;
+
+  useEffect(() => {
+      setToken(tokens[chainId][0]);
+  }, [chainId])
 
   const isWithdrawEnabled = useMemo(
     () =>

@@ -5,7 +5,7 @@ export const useForwarder = () => {
   const account = useAccount();
 
   return useQuery({
-    queryKey: ["forwarder", account.address],
+    queryKey: ["forwarder", account.address, account.chainId],
     queryFn: () =>
       fetch(
         `/api/deposit?userAddress=${account.address}&chainId=${account.chainId}`
